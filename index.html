@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>RideGuide</title>
+  <meta name="description" content="Compare what cars really cost: lease, buy or finance, per month and per km.">
+  <meta name="theme-color" content="#1f5f4a">
+  <meta name="color-scheme" content="light dark">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <h1>RideGuide</h1>
+      <p id="tagline"></p>
+    </div>
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-lang="en">EN</button>
+      <button type="button" data-lang="da">DA</button>
+    </div>
+  </header>
+
+  <nav class="toolbar">
+    <button type="button" id="add" class="primary"></button>
+    <button type="button" id="export"></button>
+    <label class="file-btn"><span id="import-label"></span><input type="file" id="import" accept="application/json,.json"></label>
+    <button type="button" id="reset" class="quiet"></button>
+  </nav>
+
+  <main>
+    <div id="grid" class="grid-wrap"></div>
+    <div id="legend" class="legend"></div>
+    <section class="settings">
+      <label for="buffer" id="buffer-label"></label>
+      <input id="buffer" type="number" inputmode="decimal" step="any" min="0">
+      <p id="buffer-hint" class="hint"></p>
+    </section>
+  </main>
+
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>

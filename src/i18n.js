@@ -1,0 +1,73 @@
+// UI strings. Keys are shared; add a language by adding another block.
+export const STRINGS = {
+  en: {
+    tagline: 'What does each car really cost you per month and per km?',
+    addCar: 'Add car', export: 'Export', import: 'Import', reset: 'Reset to sheet',
+    inputs: 'Inputs', results: 'Results', breakdown: 'Breakdown',
+    name: 'Car', duplicate: 'Duplicate', remove: 'Remove',
+    bufferLabel: 'Buffer on owned cars (%)',
+    bufferHint: 'Added to owned cars for surprises, like the sheet\'s +15%.',
+    cheapest: 'Cheapest per km',
+    confirmReset: 'Replace all cars with the ones from your spreadsheet?',
+    confirmRemove: 'Remove this car?',
+    confirmImport: 'Replace your current cars with the imported file?',
+    importError: 'That file is not a RideGuide export.',
+    empty: 'No cars yet. Add one to start comparing.',
+    fields: {
+      year: 'Year', yearsOfUse: 'Years of use', price: 'Price (kr)',
+      downPayment: 'Down payment (%)', apr: 'ÅOP (%)', financeMonths: 'Finance period (mo.)',
+      leaseMo: 'Lease / mo.', oneTimePayment: 'One-time lease payment',
+      returnFee: 'Return fee (tilbagelevering)', depreciationFactor: 'Depreciation / year (%)',
+      kmPerUnit: 'km / l (km / kWh)', pricePerUnit: 'kr / l (kr / kWh)', kmPerYear: 'km / year',
+      insuranceMo: 'Insurance / mo.', greenTaxMo: 'Green tax / mo.',
+      maintenanceMo: 'Maintenance / mo.', parkingMo: 'Parking / mo.',
+    },
+    out: {
+      fuelMo: 'Fuel / power per mo.', deprMo: 'Depreciation / mo.', financeMo: 'Finance / mo.',
+      fixed: 'Fixed costs / mo.', variable: 'Variable costs / mo.', total: 'TOTAL / mo.',
+      cashflow: 'Cash out / mo.', projection: 'Projection / mo.', kmCost: 'Final kr / km',
+      residual: 'Residual value', spent: 'Money spent in period',
+    },
+    shares: {
+      finance: 'Finance', energy: 'Fuel / power', greenTax: 'Green tax',
+      depreciation: 'Depreciation', parking: 'Parking', maintenance: 'Maintenance',
+      insurance: 'Insurance',
+    },
+  },
+  da: {
+    tagline: 'Hvad koster hver bil dig egentlig om måneden og pr. km?',
+    addCar: 'Tilføj bil', export: 'Eksportér', import: 'Importér', reset: 'Nulstil til regneark',
+    inputs: 'Indtastning', results: 'Resultater', breakdown: 'Fordeling',
+    name: 'Bil', duplicate: 'Kopiér', remove: 'Fjern',
+    bufferLabel: 'Buffer på ejede biler (%)',
+    bufferHint: 'Lægges oven i ejede biler til uforudsete udgifter, som regnearkets +15 %.',
+    cheapest: 'Billigst pr. km',
+    confirmReset: 'Erstat alle biler med dem fra dit regneark?',
+    confirmRemove: 'Fjern denne bil?',
+    confirmImport: 'Erstat dine nuværende biler med den importerede fil?',
+    importError: 'Filen er ikke en RideGuide-eksport.',
+    empty: 'Ingen biler endnu. Tilføj en for at sammenligne.',
+    fields: {
+      year: 'Årgang', yearsOfUse: 'Brugsperiode (år)', price: 'Pris (kr.)',
+      downPayment: 'Udbetaling (%)', apr: 'ÅOP (%)', financeMonths: 'Finansieringsperiode (md.)',
+      leaseMo: 'Leasing / md.', oneTimePayment: 'Engangsydelse (leasing)',
+      returnFee: 'Tilbageleveringsgebyr', depreciationFactor: 'Værditab pr. år (%)',
+      kmPerUnit: 'km / l (km / kWh)', pricePerUnit: 'kr. / l (kr. / kWh)', kmPerYear: 'km / år',
+      insuranceMo: 'Forsikring / md.', greenTaxMo: 'Grøn ejerafgift / md.',
+      maintenanceMo: 'Vedligehold / md.', parkingMo: 'Parkering / md.',
+    },
+    out: {
+      fuelMo: 'Brændstof / el pr. md.', deprMo: 'Værditab / md.', financeMo: 'Finansiering / md.',
+      fixed: 'Faste udgifter / md.', variable: 'Variable udgifter / md.', total: 'I ALT / md.',
+      cashflow: 'Udbetalt / md.', projection: 'Fremskrivning / md.', kmCost: 'Endelig kr. / km',
+      residual: 'Restværdi', spent: 'Penge brugt i perioden',
+    },
+    shares: {
+      finance: 'Finansiering', energy: 'Brændstof / el', greenTax: 'Grøn ejerafgift',
+      depreciation: 'Værditab', parking: 'Parkering', maintenance: 'Vedligehold',
+      insurance: 'Forsikring',
+    },
+  },
+};
+
+export const LANGS = Object.keys(STRINGS);
