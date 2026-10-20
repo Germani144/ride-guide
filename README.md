@@ -134,4 +134,9 @@ The pieces that would change for a commercial version are kept separate:
 ## Deploy
 
 GitHub Pages serves the repository root from `main`. Bump `CACHE` in `sw.js` when shipping
-changes, so installed copies update.
+changes.
+
+The service worker loads files from the network first (so a change shows up on the next open)
+and falls back to its cached copy offline. Other apps are served from the same
+`germani144.github.io` origin and share its cache storage, so the worker only creates, reads
+and deletes caches named `rideguide-*` and only handles requests inside `/ride-guide/`.

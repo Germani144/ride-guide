@@ -1,6 +1,14 @@
-// Offline support: serve the app shell from cache, refresh it in the background.
-// Bump CACHE when shipping changes so installed apps pick them up.
-const CACHE = 'rideguide-v2';
+// Offline support.
+//
+// Several apps live on the same origin (germani144.github.io/<app>/) and share one CacheStorage.
+// So this worker only ever creates, reads and deletes caches whose name starts with PREFIX,
+// and only handles requests inside its own folder.
+//
+// Strategy: network first, so a change shows up on the next open; the cached copy is the
+// fallback when offline or when the network is too slow. Bump CACHE when shipping changes.
+const PREFIX = 'rideguide-';
+const CACHE = `${PREFIX}v3`;
+const NETWORK_TIMEOUT_MS = 4000;
 const SHELL = [
   './', './index.html', './styles.css', './manifest.webmanifest',
   './src/app.js', './src/engine.js', './src/model.js', './src/storage.js', './src/i18n.js',
@@ -11,29 +19,55 @@ const SHELL = [
   './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png',
 ];
 
+const SCOPE = self.registration.scope; // e.g. https://germani144.github.io/ride-guide/
+
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  // cache: 'reload' skips the browser's HTTP cache, so the shell is the version just deployed.
+  e.waitUntil(
+    caches.open(CACHE)
+      .then((c) => c.addAll(SHELL.map((u) => new Request(u, { cache: 'reload' }))))
+      .then(() => self.skipWaiting()),
+  );
 });
 
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(
+        keys.filter((k) => k.startsWith(PREFIX) && k !== CACHE).map((k) => caches.delete(k)),
+      ))
       .then(() => self.clients.claim()),
   );
 });
 
+async function fromNetwork(url) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), NETWORK_TIMEOUT_MS);
+  try {
+    // no-cache: revalidate with the server instead of trusting GitHub Pages' 10-minute max-age.
+    const res = await fetch(url, { cache: 'no-cache', credentials: 'same-origin', signal: ctrl.signal });
+    if (res.ok) {
+      const cache = await caches.open(CACHE);
+      await cache.put(url, res.clone());
+    }
+    return res;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function fromCache(url, isPage) {
+  const cache = await caches.open(CACHE);
+  return (await cache.match(url, { ignoreSearch: true }))
+    || (isPage ? cache.match(new URL('./index.html', SCOPE).href) : undefined);
+}
+
 self.addEventListener('fetch', (e) => {
-  if (e.request.method !== 'GET' || new URL(e.request.url).origin !== location.origin) return;
+  const req = e.request;
+  if (req.method !== 'GET' || !req.url.startsWith(SCOPE)) return; // not ours: leave it alone
+  const url = req.url.split('#')[0];
+  const isPage = req.mode === 'navigate';
   e.respondWith(
-    caches.match(e.request).then((cached) => {
-      const network = fetch(e.request)
-        .then((res) => {
-          if (res.ok) caches.open(CACHE).then((c) => c.put(e.request, res.clone()));
-          return res;
-        })
-        .catch(() => cached);
-      return cached || network;
-    }),
+    fromNetwork(url).catch(async () => (await fromCache(url, isPage)) || Response.error()),
   );
 });
