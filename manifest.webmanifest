@@ -2,7 +2,7 @@
   "name": "RideGuide",
   "short_name": "RideGuide",
   "description": "What will this car really cost you? Lease, buy or finance, per month and per km.",
-  "id": "/ride-guide/",
+  "id": "/ride-guide/app",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
