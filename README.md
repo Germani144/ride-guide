@@ -3,8 +3,8 @@
 What will this car really cost you? Lease, buy cash, or finance, per month and per km.
 Built from the `car_comparison` tab in my `life_sheet.xlsx`, as an installable offline web app.
 
-Live: https://germani144.github.io/ride-guide/ (open on the phone and choose **Install app**
-or **Add to Home screen**).
+Live: https://germani144.github.io/ride-guide/. Don't install it yet: it shares this address with
+Nap Log, and Chrome on Android installs only one app per address. It moves to its own address first.
 
 ## Use it
 
@@ -140,5 +140,6 @@ The service worker loads files from the network first (so a change shows up on t
 and falls back to its cached copy offline. Other apps are served from the same
 `germani144.github.io` origin and share its cache storage, so the worker only creates, reads
 and deletes caches named `rideguide-*` and only handles requests inside `/ride-guide/`.
-The manifest has its own `id` (`/ride-guide/app`) and `scope` (`./`), so the browser treats
-RideGuide as a separate app from the others on the same site.
+The manifest has its own `id` (`/ride-guide/app`) and `scope` (`./`), but Chrome on Android still
+allows only one installed app per address, so RideGuide needs its own address before it can be
+installed next to Nap Log.
