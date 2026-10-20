@@ -4,42 +4,29 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>RideGuide</title>
-  <meta name="description" content="Compare what cars really cost: lease, buy or finance, per month and per km.">
-  <meta name="theme-color" content="#1f5f4a">
+  <meta name="description" content="What will this car really cost you? Lease, buy or finance, per month and per km.">
+  <meta name="theme-color" content="#e8ebed" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#14181b" media="(prefers-color-scheme: dark)">
   <meta name="color-scheme" content="light dark">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="preload" href="fonts/barlow-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/barlow-condensed-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header class="top">
-    <div class="brand">
-      <h1>RideGuide</h1>
-      <p id="tagline"></p>
-    </div>
-    <div class="lang" role="group" aria-label="Language">
-      <button type="button" data-lang="en">EN</button>
-      <button type="button" data-lang="da">DA</button>
-    </div>
+  <header class="topbar">
+    <a class="brand" href="#/new">RideGuide</a>
+    <a id="settings-link" class="icon-button" href="#/settings" aria-label="Settings">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </a>
   </header>
 
-  <nav class="toolbar">
-    <button type="button" id="add" class="primary"></button>
-    <button type="button" id="export"></button>
-    <label class="file-btn"><span id="import-label"></span><input type="file" id="import" accept="application/json,.json"></label>
-    <button type="button" id="reset" class="quiet"></button>
-  </nav>
+  <main id="view" tabindex="-1"></main>
 
-  <main>
-    <div id="grid" class="grid-wrap"></div>
-    <div id="legend" class="legend"></div>
-    <section class="settings">
-      <label for="buffer" id="buffer-label"></label>
-      <input id="buffer" type="number" inputmode="decimal" step="any" min="0">
-      <p id="buffer-hint" class="hint"></p>
-    </section>
-  </main>
+  <nav id="tabs" class="tabs" aria-label="Sections"></nav>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <script type="module" src="src/app.js"></script>
 </body>

@@ -4,6 +4,7 @@
 export const SEED_CARS = [
   {
     "name": "Fiesta GM",
+    "fuel": "petrol",
     "year": 2018,
     "yearsOfUse": 1,
     "downPayment": 0,
@@ -24,6 +25,7 @@ export const SEED_CARS = [
   },
   {
     "name": "MondeoI",
+    "fuel": "petrol",
     "year": 2004,
     "yearsOfUse": 3,
     "downPayment": 1,
@@ -44,6 +46,7 @@ export const SEED_CARS = [
   },
   {
     "name": "MondeoD",
+    "fuel": "diesel",
     "year": 2011,
     "yearsOfUse": 5,
     "downPayment": 1,
@@ -64,6 +67,7 @@ export const SEED_CARS = [
   },
   {
     "name": "MondeoIII",
+    "fuel": "petrol",
     "year": 2016,
     "yearsOfUse": 2,
     "downPayment": 1,
@@ -84,6 +88,7 @@ export const SEED_CARS = [
   },
   {
     "name": "CeedGM",
+    "fuel": "petrol",
     "year": 2021,
     "yearsOfUse": 3,
     "downPayment": 1,
@@ -104,6 +109,7 @@ export const SEED_CARS = [
   },
   {
     "name": "Y GM",
+    "fuel": "electric",
     "year": 2021,
     "yearsOfUse": 3,
     "downPayment": 1,
@@ -124,6 +130,7 @@ export const SEED_CARS = [
   },
   {
     "name": "Scenic GM",
+    "fuel": "electric",
     "year": 2021,
     "yearsOfUse": 3,
     "downPayment": 1,
