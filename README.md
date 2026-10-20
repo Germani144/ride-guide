@@ -3,8 +3,9 @@
 What will this car really cost you? Lease, buy cash, or finance, per month and per km.
 Built from the `car_comparison` tab in my `life_sheet.xlsx`, as an installable offline web app.
 
-Live: https://germani144.github.io/ride-guide/. Don't install it yet: it shares this address with
-Nap Log, and Chrome on Android installs only one app per address. It moves to its own address first.
+Live: https://germani144-ride.github.io/ride-guide/ (open on the phone and choose **Install**). It has its
+own address because Chrome on Android installs only one app per address; it moved from
+`germani144.github.io` on 2026-10-20.
 
 ## Use it
 
@@ -137,9 +138,8 @@ GitHub Pages serves the repository root from `main`. Bump `CACHE` in `sw.js` whe
 changes.
 
 The service worker loads files from the network first (so a change shows up on the next open)
-and falls back to its cached copy offline. Other apps are served from the same
-`germani144.github.io` origin and share its cache storage, so the worker only creates, reads
-and deletes caches named `rideguide-*` and only handles requests inside `/ride-guide/`.
-The manifest has its own `id` (`/ride-guide/app`) and `scope` (`./`), but Chrome on Android still
-allows only one installed app per address, so RideGuide needs its own address before it can be
-installed next to Nap Log.
+and falls back to its cached copy offline. It still only creates, reads and deletes caches named
+`rideguide-*` and only handles requests inside `/ride-guide/`, so it stays clean if it ever shares
+an origin with another app again.
+The manifest has its own `id` (`/ride-guide/app`) and `scope` (`./`). Never change the `id` of an
+installed app: phones treat a new id as a different app.
