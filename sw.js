@@ -7,7 +7,7 @@
 // Strategy: network first, so a change shows up on the next open; the cached copy is the
 // fallback when offline or when the network is too slow. Bump CACHE when shipping changes.
 const PREFIX = 'rideguide-';
-const CACHE = `${PREFIX}v3`;
+const CACHE = `${PREFIX}v4`;
 const NETWORK_TIMEOUT_MS = 4000;
 const SHELL = [
   './', './index.html', './styles.css', './manifest.webmanifest',

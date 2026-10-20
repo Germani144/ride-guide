@@ -140,3 +140,5 @@ The service worker loads files from the network first (so a change shows up on t
 and falls back to its cached copy offline. Other apps are served from the same
 `germani144.github.io` origin and share its cache storage, so the worker only creates, reads
 and deletes caches named `rideguide-*` and only handles requests inside `/ride-guide/`.
+The manifest has its own `id` (`/ride-guide/`) and `scope` (`./`), so the browser treats
+RideGuide as a separate app from the others on the same site.
