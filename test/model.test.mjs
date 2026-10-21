@@ -133,7 +133,7 @@ test('breakdown parts add up to the monthly cost', () => {
 test('v3 data moves to v4: 3 years by default, km per year shared by all cars', () => {
   const v3 = { version: 3, settings: { years: 5, buffer: 0.05 }, cars: [{ name: 'A', method: 'cash', price: 1, kmPerYear: 8000 }] };
   const s = migrate(v3);
-  assert.equal(s.version, 4);
+  assert.equal(s.version, STATE_VERSION);
   assert.equal(s.settings.years, 3);
   assert.equal(s.settings.kmPerYear, 10000);
   assert.equal(migrate({ ...v3, settings: { years: 6 } }).settings.years, 6, 'a chosen span is kept');
@@ -146,4 +146,12 @@ test('green tax is typed per half year and stored per month', () => {
   assert.equal(toShown('greenTaxMo', 200), 1200);
   assert.equal(toShown('apr', 0.05), 5);
   assert.equal(toShown('price', 1000), 1000);
+});
+
+test('v4 data moves to v5: fuel and electricity prices are shared settings', () => {
+  const s = migrate({ version: 4, settings: { years: 3 }, cars: [{ name: 'A', method: 'cash', price: 1, pricePerUnit: 99 }] });
+  assert.equal(s.version, 5);
+  assert.equal(s.settings.petrolPrice, DEFAULT_SETTINGS.petrolPrice);
+  assert.equal(s.settings.homeElPrice, DEFAULT_SETTINGS.homeElPrice);
+  assert.equal(toEngineInput(s.cars[0]).pricePerUnit, undefined, "the car's own price is no longer used");
 });

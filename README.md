@@ -21,7 +21,7 @@ The app has three tabs:
      - finance: price, down payment (below 100%), ÅOP, loan period; loss in value as above
      - lease: monthly lease, one-time payment, return fee, lease period, and switches for
        "service included" (default on) and "tyres included" (default off)
-  5. Fuel: fuel or energy use, fuel price or home electricity price.
+  5. Fuel: fuel or energy use. Prices are shared by every car (Settings).
   6. Running costs: insurance and parking per month, green tax per half year (as on the bill;
      the app divides it by 6); maintenance is estimated
      (switch it off to type your own; not asked when the lease includes service).
@@ -42,10 +42,11 @@ new payment method, so lease vs. finance is two taps away), compare it, or delet
 Settings (top right) holds the language (English or Danish), the years of ownership and km per
 year, the return on your money (4% a year), the safety margin on owned cars (5%), the running-cost
 prices (tyres, winter tyres, inspection, roadside assistance, washing), fuel and electricity
-(yearly price change, public charging share and price, extra winter use for electric cars),
+(petrol, diesel, electricity at home and at public chargers, public charging share, extra winter
+use for electric cars, yearly price change),
 backup export and import, and a reset to the spreadsheet cars. Settings save automatically as you
-change them; a "Saved" message confirms it. The app version is at the bottom of Settings and on the
-loading screen.
+change them; a "Saved" message confirms it. The app version is next to the name in the header, at the
+bottom of Settings and on the loading screen.
 
 Numbers can be typed the Danish or English way: `13,69`, `13.69`, `250.000` and `250 000`
 all work. The license plate is stored with the car; automatic lookup of green tax and fuel use
@@ -87,7 +88,7 @@ All prices are in today's money.
 | Money tied up in the car | equivalent monthly cost of (down payment + instalments + loan left at the end − sale value) at the return rate, minus loss in value and interest. Negative ("saved by paying later") when a cheap loan beats paying cash. |
 | Loan interest | interest paid within the span, spread per month. Instalments follow PMT(ÅOP ÷ 12, loan period, loan). |
 | Lease | monthly lease + one-time payment at each start + return fee at each end, discounted. |
-| Fuel / power | km per month ÷ km per unit × price, growing by the yearly price change. Electric: 80% home price + 20% public price (3.50 kr/kWh), and 10% extra use in the cold. |
+| Fuel / power | km per month ÷ km per unit × price, growing by the yearly price change. Prices are settings shared by every car: petrol 13.69 and diesel 13.29 kr per litre (from the spreadsheet), electricity 1.40 kr per kWh at home and 3.50 at public chargers (FDM 2026). Electric: 80% home + 20% public, and 10% extra use in the cold. |
 | Insurance | today's premium; on owned cars half of it follows the car's value down. |
 | Maintenance and repairs | (yearly base + per km × km a year) ÷ 12 × (1 + 8% × age), age up to 15. Petrol 3,000 kr + 0.25 kr/km, diesel 3,500 kr + 0.25 kr/km, electric 2,000 kr + 0.15 kr/km. Skipped when the lease includes service. |
 | Tyres | km × (four tyres 3,500 kr ÷ tyre life 30,000 km; electric 25,000 km), plus two swaps a year (400 kr each) with winter tyres. Skipped when the lease includes tyres. |
@@ -121,6 +122,13 @@ formula generation; their values are kept in `data/sheet_fixtures.json`.
 `src/model.js` maps each car to the engine's inputs by payment method: a lease has no price,
 paying upfront is 100% down, and numbers that belong to another method count as zero (they stay
 saved, so switching back loses nothing).
+
+## Planned
+
+- **Look up a car by its plate**: green tax, fuel use, and ideally market value.
+- **Today's Danish fuel and electricity prices**, fetched automatically instead of typed in
+  Settings (they vary a lot). Needs a price source the app may call from the browser.
+- **Survival model for maintenance**, from Pedro's own algorithms, replacing the maintenance curve.
 
 ## Tests
 

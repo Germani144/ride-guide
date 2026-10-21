@@ -347,3 +347,4 @@ button:disabled { opacity: 0.45; cursor: not-allowed; }
 }
 
 .input-wrap.setting-input { max-width: 260px; }
+.brand-version { font-family: var(--sans); font-weight: 500; font-size: 0.75rem; color: var(--ink-2); margin-left: 4px; font-variant-numeric: tabular-nums; }

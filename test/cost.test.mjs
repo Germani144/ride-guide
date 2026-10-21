@@ -151,3 +151,11 @@ test('km per year falls back to the shared setting', () => {
   const out = calculate(car, { ...bare, kmPerYear: 12000 });
   near(out.kmMo, 1000, 1e-9, 'km per month');
 });
+
+test('fuel and electricity prices come from the settings when the car has none', () => {
+  const s = { ...bare, years: 1, petrolPrice: 15, dieselPrice: 12, homeElPrice: 2, evPublicShare: 0, evWinterExtra: 0 };
+  const car = { ...noRunning, kmPerUnit: 10, kmPerYear: 12000, method: 'cash', price: 0, pricePerUnit: undefined };
+  near(calculate(car, s).parts.energy, 1500, 1e-9, 'petrol');
+  near(calculate({ ...car, fuel: 'diesel' }, s).parts.energy, 1200, 1e-9, 'diesel');
+  near(calculate({ ...car, fuel: 'electric' }, s).parts.energy, 200, 1e-9, 'electric at home');
+});

@@ -4,7 +4,7 @@ import { DEFAULT_SETTINGS } from './engine.js';
 // A saved car keeps every number it has ever been given, so switching payment method and back
 // loses nothing. toEngineInput() decides which numbers count for the chosen method.
 
-export const STATE_VERSION = 4;
+export const STATE_VERSION = 5;
 export const METHODS = ['cash', 'finance', 'lease'];
 export const FUELS = ['petrol', 'diesel', 'electric'];
 
@@ -28,7 +28,8 @@ export const COST_FIELDS = {
 };
 // Km per year is shared by all cars (Settings and the bars on History and Comparison), like the
 // years of ownership, so a car only stores how much fuel it uses and what the fuel costs.
-export const DRIVING_FIELDS = ['kmPerUnit', 'pricePerUnit'];
+// Fuel and electricity prices are shared too (Settings), so a car only stores its consumption.
+export const DRIVING_FIELDS = ['kmPerUnit'];
 export const RUNNING_FIELDS = ['insuranceMo', 'greenTaxMo', 'maintenanceMo', 'parkingMo'];
 
 // The fields a step really asks for, given the car's switches.
@@ -123,7 +124,7 @@ export function toEngineInput(car, { year = new Date().getFullYear(), kmPerYear 
     leaseYears: lease ? car.yearsOfUse : 0,
     serviceIncluded: car.serviceIncluded !== false,
     tyresIncluded: car.tyresIncluded === true,
-    kmPerYear, kmPerUnit: car.kmPerUnit, pricePerUnit: car.pricePerUnit,
+    kmPerYear, kmPerUnit: car.kmPerUnit, // fuel and electricity prices come from the settings
     insuranceMo: car.insuranceMo, greenTaxMo: car.greenTaxMo,
     maintenanceAuto: car.maintenanceAuto !== false, maintenanceMo: car.maintenanceMo,
     parkingMo: car.parkingMo,
@@ -190,7 +191,7 @@ export function validate(car, fields) {
   for (const f of fields) {
     if (f === 'name' && !car.name.trim()) errors.name = 'required';
     if (f === 'plate' && !car.plate.trim()) errors.plate = 'required';
-    if (['price', 'leaseMo', 'kmPerUnit', 'pricePerUnit'].includes(f)) positive(f);
+    if (['price', 'leaseMo', 'kmPerUnit'].includes(f)) positive(f);
     if (f === 'yearsOfUse' && car.method === 'lease') positive(f);
     if (f === 'apr' && car.method === 'finance') positive(f);
     if (f === 'financeMonths' && car.method === 'finance') positive(f);

@@ -17,8 +17,9 @@ const GROUPS = {
     ['inspectionPrice', 'kr', false], ['roadsideYear', 'krYear', false], ['washingMo', 'krMonth', false],
   ],
   energy: [
-    ['energyGrowth', 'pctYear', true], ['evPublicShare', 'pct', true],
-    ['evPublicPrice', 'krKwh', false], ['evWinterExtra', 'pct', true],
+    ['petrolPrice', 'krLitre', false], ['dieselPrice', 'krLitre', false],
+    ['homeElPrice', 'krKwh', false], ['evPublicPrice', 'krKwh', false], ['evPublicShare', 'pct', true],
+    ['evWinterExtra', 'pct', true], ['energyGrowth', 'pctYear', true],
   ],
 };
 

@@ -14,8 +14,11 @@ export const DEFAULT_SETTINGS = {
   returnRate: 0.04,       // yearly return on money you don't spend on the car (compounding)
   buffer: 0.05,           // safety margin on owned cars
   energyGrowth: 0,        // yearly change in fuel and electricity prices
+  petrolPrice: 13.69,     // kr per litre (shared by every car; live prices are planned)
+  dieselPrice: 13.29,     // kr per litre
+  homeElPrice: 1.4,       // kr per kWh charging at home
   evPublicShare: 0.2,     // share of charging done at public chargers
-  evPublicPrice: 3.5,     // kr per kWh at public fast chargers
+  evPublicPrice: 3.5,     // kr per kWh at public (street and fast) chargers
   evWinterExtra: 0.1,     // extra energy use over the year for electric cars (cold weather)
   tyreSetPrice: 3500,     // four tyres including fitting
   tyreLifeKm: 30000,
@@ -78,7 +81,7 @@ export const PART_KEYS = [
  * @property {boolean} tyresIncluded   lease covers tyres
  * @property {number} kmPerYear
  * @property {number} kmPerUnit         km per litre (or km per kWh)
- * @property {number} pricePerUnit      kr per litre (or kr per kWh at home)
+ * @property {number} [pricePerUnit]    kr per litre (or per kWh at home); defaults to the settings
  * @property {number} insuranceMo       today's premium per month
  * @property {number} greenTaxMo
  * @property {boolean} maintenanceAuto  use the maintenance curve; otherwise maintenanceMo
@@ -203,9 +206,10 @@ export function calculate(input, settings = {}) {
 
   // ----- month by month -----
   const life = electric ? s.tyreLifeKmEv : s.tyreLifeKm;
+  const pumpOrHome = input.pricePerUnit ?? (electric ? s.homeElPrice : fuel === 'diesel' ? s.dieselPrice : s.petrolPrice);
   const unitPrice = electric
-    ? (1 - num(s.evPublicShare)) * num(input.pricePerUnit) + num(s.evPublicShare) * num(s.evPublicPrice)
-    : num(input.pricePerUnit);
+    ? (1 - num(s.evPublicShare)) * num(pumpOrHome) + num(s.evPublicShare) * num(s.evPublicPrice)
+    : num(pumpOrHome);
   const kmPerUnit = electric ? num(input.kmPerUnit) / (1 + num(s.evWinterExtra)) : num(input.kmPerUnit);
   const m = MAINTENANCE[fuel];
   const serviceByLease = lease && input.serviceIncluded !== false;

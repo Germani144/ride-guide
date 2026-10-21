@@ -1,7 +1,7 @@
 // "New car": the landing page. A decision tree that asks one thing per screen,
 // starting with the most general question (do you have the plate?).
 import {
-  newCar, METHODS, FUELS, DRIVING_FIELDS, ENERGY_DEFAULTS, costFields, runningFields,
+  newCar, METHODS, FUELS, DRIVING_FIELDS, costFields, runningFields,
   formatPlate, parseNumber, validate, toShown, fromShown,
 } from '../model.js';
 import { fmt } from '../i18n.js';
@@ -145,7 +145,7 @@ function renderForm(ctx, d, advance) {
       : d.step === 'cost' ? t.steps.cost[car.method]
         : t.steps[d.step].title;
   form.append(el('h2', {}, title));
-  const hint = d.step === 'plateEntry' ? t.steps.plateEntry.hint : d.step === 'running' ? t.steps.running.hint : null;
+  const hint = ['plateEntry', 'running', 'driving'].includes(d.step) ? t.steps[d.step].hint : null;
 
   const errorNodes = {};
   const showErrors = (errs) => {
@@ -265,10 +265,7 @@ function fuelPicker(car, t, ctx) {
     group.append(el('button', {
       type: 'button', role: 'radio', 'aria-checked': String(car.fuel === f),
       onclick: (e) => {
-        const was = car.fuel;
         car.fuel = f;
-        // Swap the energy price only if it is still the default for the old fuel.
-        if (!car.pricePerUnit || car.pricePerUnit === ENERGY_DEFAULTS[was]) car.pricePerUnit = ENERGY_DEFAULTS[f];
         for (const b of group.children) b.setAttribute('aria-checked', String(b === e.currentTarget));
         ctx.save();
       },

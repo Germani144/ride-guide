@@ -17,7 +17,7 @@
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="#/new">RideGuide</a>
+    <a class="brand" href="#/new">RideGuide <span class="brand-version" id="brand-version"></span></a>
     <a id="settings-link" class="icon-button" href="#/settings" aria-label="Settings">
       <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
     </a>
@@ -29,7 +29,9 @@
     <p class="splash-version" id="splash-version"></p>
   </div>
   <script src="src/version.js"></script>
-  <script>document.getElementById('splash-version').textContent = 'v' + self.RIDEGUIDE_VERSION;</script>
+  <script>
+    for (const id of ['splash-version', 'brand-version']) document.getElementById(id).textContent = 'v' + self.RIDEGUIDE_VERSION;
+  </script>
 
   <main id="view" tabindex="-1"></main>
 
