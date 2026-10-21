@@ -15,7 +15,8 @@
   change that ships. It shows on the loading screen and in Settings, and names the offline cache.
   Add new app files to the `SHELL` list in `sw.js`.
 - Changes to saved data shape go through `migrate()` in `src/model.js`, with a test.
-- Ask before pushing to GitHub.
+- Push to GitHub without asking once a change Pedro asked for is built and `npm test` passes
+  (his standing instruction, 2026-10-21). Don't push work he hasn't asked for.
 
 ## Address and shared-origin rules
 
