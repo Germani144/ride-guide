@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { calculate, pmt, ipmt } from '../src/engine.js';
+import { calculate, pmt, ipmt } from '../src/engine-sheet.js';
 
 const cars = JSON.parse(readFileSync(new URL('../data/sheet_fixtures.json', import.meta.url)));
 const close = (a, b, label) =>

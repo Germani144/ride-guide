@@ -17,27 +17,36 @@ The app has three tabs:
   2. Which car is it: make and model, model year, fuel (petrol, diesel or electric).
   3. How will you pay: pay upfront, finance or lease.
   4. The terms for that choice:
-     - pay upfront: price, years you keep it, yearly loss in value
-     - finance: price, down payment (below 100%), ÅOP, loan period, years you keep it, yearly loss in value
-     - lease: monthly lease, one-time payment, return fee, lease period
-  5. Driving: km per year, fuel or energy use, fuel or electricity price.
-  6. Running costs per month: insurance, green tax, maintenance, parking.
-  7. The result: kr per km, cost per month, where the money goes. Save it as **my car**
-     or just to **history**. Any answer can be changed from the result screen.
+     - pay upfront: price; loss in value is estimated (switch it off to type your own yearly rate)
+     - finance: price, down payment (below 100%), ÅOP, loan period; loss in value as above
+     - lease: monthly lease, one-time payment, return fee, lease period, and switches for
+       "service included" (default on) and "tyres included" (default off)
+  5. Driving: km per year, fuel or energy use, fuel price or home electricity price.
+  6. Running costs per month: insurance, green tax, parking; maintenance is estimated
+     (switch it off to type your own; not asked when the lease includes service).
+  7. The result: kr per km, cost per month, where the money goes, over the shared time span
+     (pick 3 to 10 years right there). Save it as **my car** or just to **history**. Any answer
+     can be changed from the result screen.
 - **Garage** shows the cars you marked as yours.
 - **History** shows every car you have added. Tap **Compare** to put 2 or 3 side by side.
 
 On a car's page you can mark it as yours, edit it, **try another way to pay** (same car,
 new payment method, so lease vs. finance is two taps away), compare it, or delete it.
 
-Settings (top right) holds the language (English or Danish), the buffer on owned cars
-(the sheet's +15%), backup export and import, and a reset to the spreadsheet cars.
+Settings (top right) holds the language (English or Danish), the time span every car is compared
+over, the return on your money (4% a year), the safety margin on owned cars (5%), the running-cost
+prices (tyres, winter tyres, inspection, roadside assistance, washing), fuel and electricity
+(yearly price change, public charging share and price, extra winter use for electric cars),
+backup export and import, and a reset to the spreadsheet cars. The app version is at the bottom
+of Settings and on the loading screen.
 
 Numbers can be typed the Danish or English way: `13,69`, `13.69`, `250.000` and `250 000`
 all work. The license plate is stored with the car; automatic lookup of green tax and fuel use
 from the plate is not connected yet.
 
-Data is stored in the browser on the device only. Older v0.1 data is upgraded automatically.
+Data is stored in the browser on the device only. Older data (v0.1 and v2) is upgraded
+automatically: cars switch to the estimated loss in value and maintenance (their typed values are
+kept for the manual mode), and the old 15% buffer becomes the new 5% default.
 
 ## Run locally
 
@@ -52,58 +61,78 @@ Opening `index.html` straight from disk does not work, because ES modules need a
 
 ## How the numbers are calculated
 
-`src/engine.js` is a direct port of the sheet's current formulas (the Fiesta GM column onward):
+`src/engine.js` simulates each car month by month over one **shared time span** (Settings,
+default 5 years), so every car is compared over the same period. Owned cars are sold at the end
+at their estimated value (any loan left is paid off from the sale). Leases renew on the same terms
+until the span is filled; a partial last lease counts pro rata.
 
-| Result | Formula |
+Every payment is **discounted** at the return your money could earn (default 4% a year,
+compounding monthly). That counts the money tied up in a car and makes a big payment now
+comparable with small payments later. The result is the **equivalent fixed monthly cost**:
+the steady monthly amount with the same value today as all the car's payments.
+All prices are in today's money.
+
+| Part | How it is calculated |
 |---|---|
-| Fuel / power per mo. | km per month × kr per litre (kWh) ÷ km per litre (kWh) |
-| Depreciation / mo. | (price − price ÷ (1 + yearly factor)^years) ÷ months |
-| Finance / mo. | PMT(ÅOP ÷ 12, period, price − down payment × price) |
-| Fixed costs | insurance + green tax + finance + depreciation + lease + parking + (one-time payment + return fee) ÷ months |
-| Variable costs | fuel / power + maintenance |
-| TOTAL / mo. | fixed + variable − equity credit (financed cars: instalments × residual ÷ price, plus interest paid in the period, spread per month) |
-| Cash out / mo. | fixed + variable for owned cars, TOTAL for leases |
-| Projection / mo. | TOTAL × (1 + buffer) for owned cars, TOTAL for leases |
-| Final kr / km | projection ÷ km per month |
-| Residual value | price − depreciation over the period |
+| Loss in value | price − value at the end, spread evenly per month. Value curve: −20% in the first year, then −12% a year (electric: −22%, then −13%). The yearly rate goes up 1 point per 5,000 km above 15,000 km a year (limits 4–30%). A used car continues from its age (model year). Manual mode: value = price ÷ (1 + yearly rate)^years. |
+| Money tied up in the car | equivalent monthly cost of (down payment + instalments + loan left at the end − sale value) at the return rate, minus loss in value and interest. Negative ("saved by paying later") when a cheap loan beats paying cash. |
+| Loan interest | interest paid within the span, spread per month. Instalments follow PMT(ÅOP ÷ 12, loan period, loan). |
+| Lease | monthly lease + one-time payment at each start + return fee at each end, discounted. |
+| Fuel / power | km per month ÷ km per unit × price, growing by the yearly price change. Electric: 80% home price + 20% public price (3.50 kr/kWh), and 10% extra use in the cold. |
+| Insurance | today's premium; on owned cars half of it follows the car's value down. |
+| Maintenance and repairs | (yearly base + per km × km a year) ÷ 12 × (1 + 8% × age), age up to 15. Petrol 3,000 kr + 0.25 kr/km, diesel 3,500 kr + 0.25 kr/km, electric 2,000 kr + 0.15 kr/km. Skipped when the lease includes service. |
+| Tyres | km × (four tyres 3,500 kr ÷ tyre life 30,000 km; electric 25,000 km), plus two swaps a year (400 kr each) with winter tyres. Skipped when the lease includes tyres. |
+| Inspection, roadside help, washing | inspection (500 kr) at age 4 and then every 2 years, unless the lease includes service; roadside assistance 600 kr a year for owned cars (leases include it); washing 100 kr a month. |
+| Green tax, parking | as typed, per month. |
+| Safety margin | owned cars only: 5% on top of everything else. |
 
-The sheet only sums interest over 96 months. The app has no such limit.
+Results: **kr per km** = cost per month ÷ km per month. **Total** = cost per month × months.
+**Paid up front** = down payment (cash: the price) or the first one-time lease payment.
+**Paid out per month** = plain average of everything paid after the start (instalments, lease,
+running costs), without discounting or the sale.
 
-What the app shows, and where it comes from:
+With the defaults, a new 300,000 kr car driven 20,000 km a year for 5 years comes out close to
+FDM's 2026 car budget (petrol about 4.3 kr/km, electric about 3.6 kr/km; FDM: 4.32 and 3.86);
+`test/cost.test.mjs` keeps it within 0.35 kr/km.
 
-- **kr per km** is the sheet's "Final kr/km".
-- **Cost per month** is the sheet's "Projection per month" (TOTAL plus the buffer on owned cars),
-  so it matches kr per km.
-- **Paid out per month** is the sheet's "Cashflow/month".
-- **Total for the period** is cost per month × months kept.
-- **Value at the end** is the residual value (owned cars only).
-- **Where the money goes** splits the cash paid out per month into lease (including one-time
-  payment and return fee spread over the period), loan, loss in value, fuel or power,
-  insurance, green tax, maintenance and parking.
+Defaults come from: [FDM, cost of a car in 2026](https://fdm.dk/nyheder/nyt-om-trafik-og-biler/hvad-koster-det-at-holde-bil-i-2026-faa-svaret-her)
+(home/public charging split, totals), [FDM, inspection rules](https://fdm.dk/vaerd-at-vide/biltest-bilsyn/hvornaar-skal-min-bil-synes),
+and Danish price surveys for [tyres](https://www.skagenonline.dk/faq/hvad-koster-nye-daek-inkl-montering),
+[inspection](https://www.skagenonline.dk/faq/hvad-koster-et-bilsyn-hos-dekra) and
+[roadside assistance](https://www.skagenonline.dk/faq/hvad-koster-vejhjaelp-om-maneden).
+The value and maintenance curves are first estimates, to be replaced by data (the survival model
+for maintenance is planned).
 
-`src/model.js` maps each car to the engine's inputs by payment method, using the sheet's
-conventions: a lease has no price and no loss in value, paying upfront is 100% down,
-and numbers that belong to another method count as zero (they stay saved, so switching back
-loses nothing).
+**Sheet mode.** `src/engine-sheet.js` is the original port of the spreadsheet's formulas
+(the Fiesta GM column onward). The app no longer uses it; it stays as the reference the tests
+check against `life_sheet.xlsx`. The first three sheet columns (Avensis, Aygo, A4) use an older
+formula generation; their values are kept in `data/sheet_fixtures.json`.
 
-The first three sheet columns (Avensis, Aygo, A4) use an older formula generation and are
-not part of the seed data. Their values are kept in `data/sheet_fixtures.json`.
+`src/model.js` maps each car to the engine's inputs by payment method: a lease has no price,
+paying upfront is 100% down, and numbers that belong to another method count as zero (they stay
+saved, so switching back loses nothing).
 
 ## Tests
 
-- `test/engine.test.mjs` checks the engine against the spreadsheet: the seven current columns
+- `test/cost.test.mjs` checks the cost engine: value curve, money tied up, finance, lease
+  renewal, maintenance, tyres, inspection, roadside, electricity, insurance, safety margin,
+  and that the defaults stay near FDM's 2026 budget.
+- `test/engine.test.mjs` checks sheet mode (`src/engine-sheet.js`) against the spreadsheet: the seven current columns
   in `data/sheet_fixtures.json` must match to within 0.01 kr, and three financed scenarios in
   `data/sheet_fixtures_financed.json` (set on a copy of the workbook and recalculated in
   LibreOffice) check the finance logic.
-- `test/model.test.mjs` checks that the seed cars give identical results through the model,
-  the payment method mapping, the v0.1 data upgrade, plate formatting, number parsing,
-  validation, and that the breakdown adds up to the cash paid out.
+- `test/model.test.mjs` checks the payment method mapping, the v0.1 and v2 data upgrades,
+  which fields the switches ask for, plate formatting, number parsing, validation, that the
+  breakdown adds up to the monthly cost, and that the version matches in `src/version.js` and
+  `package.json`.
 
 ## Structure
 
 ```
 index.html, styles.css        page shell and styling (light and dark)
+src/version.js                app version (loading screen, Settings, offline cache name)
 src/engine.js                 cost engine: pure functions, no DOM or storage
+src/engine-sheet.js           sheet mode: the spreadsheet's formulas, used by the tests only
 src/model.js                  car data model, payment methods, migration, validation
 src/storage.js                storage adapter (localStorage today)
 src/i18n.js                   English and Danish strings
@@ -124,7 +153,7 @@ data/, test/                  spreadsheet fixtures and tests
 The pieces that would change for a commercial version are kept separate:
 
 - **Engine and model** have no browser dependencies, so they can run unchanged on a server
-  (Node) or be ported to another backend language with the fixtures as the acceptance test.
+  (Node) or be ported to another backend language with the tests as the acceptance test.
 - **Storage** sits behind `load()` and `save()`. Swapping localStorage for an API with
   accounts means adding one adapter, not touching the UI.
 - **Saved data** carries a `version` field, and `migrate()` upgrades older versions.
@@ -134,8 +163,9 @@ The pieces that would change for a commercial version are kept separate:
 
 ## Deploy
 
-GitHub Pages serves the repository root from `main`. Bump `CACHE` in `sw.js` when shipping
-changes.
+GitHub Pages serves the repository root from `main`. Bump the version in `src/version.js`
+(and `package.json`) with every change that ships: it shows on the loading screen and in
+Settings, and names the offline cache, so phones pick up the new files.
 
 The service worker loads files from the network first (so a change shows up on the next open)
 and falls back to its cached copy offline. It still only creates, reads and deletes caches named

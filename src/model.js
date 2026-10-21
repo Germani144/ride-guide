@@ -1,8 +1,10 @@
 // Car data model. Pure functions: no DOM, no storage, no network.
+import { DEFAULT_SETTINGS } from './engine.js';
+
 // A saved car keeps every number it has ever been given, so switching payment method and back
 // loses nothing. toEngineInput() decides which numbers count for the chosen method.
 
-export const STATE_VERSION = 2;
+export const STATE_VERSION = 3;
 export const METHODS = ['cash', 'finance', 'lease'];
 export const FUELS = ['petrol', 'diesel', 'electric'];
 
@@ -15,14 +17,31 @@ export const NUMBER_FIELDS = [
   'insuranceMo', 'greenTaxMo', 'maintenanceMo', 'parkingMo',
 ];
 
-// Fields asked for on the payment step, per method.
+export const BOOL_FIELDS = ['depreciationAuto', 'maintenanceAuto', 'serviceIncluded', 'tyresIncluded'];
+
+// Fields asked for on the payment step, per method. How long you keep an owned car is the
+// shared time span in Settings, so it is no longer asked per car; a lease asks its period.
 export const COST_FIELDS = {
-  cash: ['price', 'yearsOfUse', 'depreciationFactor'],
-  finance: ['price', 'downPayment', 'apr', 'financeMonths', 'yearsOfUse', 'depreciationFactor'],
+  cash: ['price'],
+  finance: ['price', 'downPayment', 'apr', 'financeMonths'],
   lease: ['leaseMo', 'oneTimePayment', 'returnFee', 'yearsOfUse'],
 };
 export const DRIVING_FIELDS = ['kmPerYear', 'kmPerUnit', 'pricePerUnit'];
 export const RUNNING_FIELDS = ['insuranceMo', 'greenTaxMo', 'maintenanceMo', 'parkingMo'];
+
+// The fields a step really asks for, given the car's switches.
+export function costFields(car) {
+  const f = [...COST_FIELDS[car.method]];
+  if (car.method !== 'lease' && car.depreciationAuto === false) f.push('depreciationFactor');
+  return f;
+}
+export function runningFields(car) {
+  return RUNNING_FIELDS.filter((f) => f !== 'maintenanceMo'
+    || (car.maintenanceAuto === false && !(car.method === 'lease' && car.serviceIncluded !== false)));
+}
+
+// Settings the user can change, with their defaults (see engine.js).
+export const SETTING_KEYS = Object.keys(DEFAULT_SETTINGS);
 
 // Stored as fractions, shown and typed as percentages.
 export const PERCENT_FIELDS = new Set(['downPayment', 'apr', 'depreciationFactor']);
@@ -41,6 +60,7 @@ export function newCar(overrides = {}) {
     financeMonths: 0, depreciationFactor: 0, leaseMo: 0, oneTimePayment: 0, returnFee: 0,
     kmPerYear: 0, kmPerUnit: 0, pricePerUnit: ENERGY_DEFAULTS.petrol,
     insuranceMo: 0, greenTaxMo: 0, maintenanceMo: 0, parkingMo: 0,
+    depreciationAuto: true, maintenanceAuto: true, serviceIncluded: true, tyresIncluded: false,
     ...overrides,
   };
 }
@@ -71,46 +91,62 @@ export function sanitizeCar(raw) {
     const v = Number(raw?.[f]);
     car[f] = Number.isFinite(v) ? v : base[f];
   }
+  for (const f of BOOL_FIELDS) car[f] = typeof raw?.[f] === 'boolean' ? raw[f] : base[f];
   return car;
 }
 
-// The numbers the engine sees. Fields that do not belong to the chosen method count as zero,
-// with the same conventions as the spreadsheet (leases have no price; cash is 100% down).
-export function toEngineInput(car) {
-  const input = {
-    name: car.name, year: car.year, yearsOfUse: car.yearsOfUse,
+// The numbers the engine sees. Fields that do not belong to the chosen method count as zero
+// (they stay saved, so switching back loses nothing). `year` is the current calendar year,
+// used for the car's age.
+export function toEngineInput(car, { year = new Date().getFullYear() } = {}) {
+  const lease = car.method === 'lease';
+  return {
+    method: car.method, fuel: car.fuel,
+    age: car.year > 1900 ? Math.max(0, year - car.year) : 0,
+    price: lease ? 0 : car.price,
+    downPayment: car.method === 'finance' ? car.downPayment : 1,
+    apr: car.method === 'finance' ? car.apr : 0,
+    financeMonths: car.method === 'finance' ? car.financeMonths : 0,
+    depreciationAuto: car.depreciationAuto !== false,
+    depreciationFactor: car.depreciationFactor,
+    leaseMo: lease ? car.leaseMo : 0,
+    oneTimePayment: lease ? car.oneTimePayment : 0,
+    returnFee: lease ? car.returnFee : 0,
+    leaseYears: lease ? car.yearsOfUse : 0,
+    serviceIncluded: car.serviceIncluded !== false,
+    tyresIncluded: car.tyresIncluded === true,
     kmPerYear: car.kmPerYear, kmPerUnit: car.kmPerUnit, pricePerUnit: car.pricePerUnit,
     insuranceMo: car.insuranceMo, greenTaxMo: car.greenTaxMo,
-    maintenanceMo: car.maintenanceMo, parkingMo: car.parkingMo,
-    price: 0, downPayment: 1, apr: 0, financeMonths: 0, depreciationFactor: 0,
-    leaseMo: 0, oneTimePayment: 0, returnFee: 0,
+    maintenanceAuto: car.maintenanceAuto !== false, maintenanceMo: car.maintenanceMo,
+    parkingMo: car.parkingMo,
   };
-  if (car.method === 'cash') {
-    Object.assign(input, { price: car.price, depreciationFactor: car.depreciationFactor });
-  } else if (car.method === 'finance') {
-    Object.assign(input, {
-      price: car.price, depreciationFactor: car.depreciationFactor,
-      downPayment: car.downPayment, apr: car.apr, financeMonths: car.financeMonths,
-    });
-  } else if (car.method === 'lease') {
-    Object.assign(input, {
-      leaseMo: car.leaseMo, oneTimePayment: car.oneTimePayment, returnFee: car.returnFee,
-    });
-  }
-  return input;
 }
 
 export function emptyState(lang = 'en') {
-  return { version: STATE_VERSION, lang, settings: { buffer: 0.15 }, cars: [], draft: null };
+  return { version: STATE_VERSION, lang, settings: { ...DEFAULT_SETTINGS }, cars: [], draft: null };
+}
+
+// Keeps known settings of the right type and fills the rest with defaults.
+export function sanitizeSettings(raw) {
+  const out = { ...DEFAULT_SETTINGS };
+  for (const k of SETTING_KEYS) {
+    const v = raw?.[k];
+    if (typeof DEFAULT_SETTINGS[k] === 'boolean') { if (typeof v === 'boolean') out[k] = v; }
+    else if (typeof v === 'number' && Number.isFinite(v) && v >= 0) out[k] = v;
+  }
+  if (!(out.years > 0)) out.years = DEFAULT_SETTINGS.years;
+  return out;
 }
 
 // Accepts the current state, the v0.1 grid state, or an export of either.
 export function migrate(raw, fallbackLang = 'en') {
   if (!raw || typeof raw !== 'object' || !Array.isArray(raw.cars)) return null;
   const lang = raw.lang === 'da' || raw.lang === 'en' ? raw.lang : fallbackLang;
-  const buffer = Number(raw.settings?.buffer);
   const state = emptyState(lang);
-  state.settings.buffer = Number.isFinite(buffer) && buffer >= 0 ? buffer : 0.15;
+  state.settings = sanitizeSettings(raw.settings);
+  // Before v3 the buffer covered costs the model did not know about (tyres, rising repairs).
+  // Those are modelled now, so the old 15% default becomes the new, smaller default.
+  if ((raw.version ?? 1) < 3 && raw.settings?.buffer === 0.15) state.settings.buffer = DEFAULT_SETTINGS.buffer;
   state.cars = raw.cars.slice(0, 500).map(sanitizeCar);
   if (raw.version === STATE_VERSION && raw.draft && typeof raw.draft === 'object' && raw.draft.car) {
     state.draft = { ...raw.draft, car: sanitizeCar(raw.draft.car) };
@@ -144,7 +180,8 @@ export function validate(car, fields) {
   for (const f of fields) {
     if (f === 'name' && !car.name.trim()) errors.name = 'required';
     if (f === 'plate' && !car.plate.trim()) errors.plate = 'required';
-    if (['price', 'leaseMo', 'yearsOfUse', 'kmPerYear', 'kmPerUnit', 'pricePerUnit'].includes(f)) positive(f);
+    if (['price', 'leaseMo', 'kmPerYear', 'kmPerUnit', 'pricePerUnit'].includes(f)) positive(f);
+    if (f === 'yearsOfUse' && car.method === 'lease') positive(f);
     if (f === 'apr' && car.method === 'finance') positive(f);
     if (f === 'financeMonths' && car.method === 'finance') positive(f);
     if (f === 'downPayment' && car.method === 'finance' && !(car.downPayment >= 0 && car.downPayment < 1)) {
@@ -153,22 +190,4 @@ export function validate(car, fields) {
     if (car[f] < 0) errors[f] = 'negative';
   }
   return errors;
-}
-
-// Monthly amounts behind the cash paid out (fixed + variable costs), for the breakdown bar.
-// Display only: each part comes straight from the engine output or the car's own inputs.
-export const PART_KEYS = ['lease', 'finance', 'depreciation', 'energy', 'insurance', 'greenTax', 'maintenance', 'parking'];
-
-export function costParts(engineInput, out) {
-  const months = out.months || 1;
-  return {
-    lease: engineInput.leaseMo + (engineInput.oneTimePayment + engineInput.returnFee) / months,
-    finance: out.financeMo,
-    depreciation: out.deprMo,
-    energy: out.fuelMo,
-    insurance: engineInput.insuranceMo,
-    greenTax: engineInput.greenTaxMo,
-    maintenance: engineInput.maintenanceMo,
-    parking: engineInput.parkingMo,
-  };
 }

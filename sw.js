@@ -5,13 +5,14 @@
 // and only handles requests inside its own folder.
 //
 // Strategy: network first, so a change shows up on the next open; the cached copy is the
-// fallback when offline or when the network is too slow. Bump CACHE when shipping changes.
+// fallback when offline or when the network is too slow. Bump the version in src/version.js when shipping changes.
+importScripts('./src/version.js'); // sets self.RIDEGUIDE_VERSION
 const PREFIX = 'rideguide-';
-const CACHE = `${PREFIX}v6`;
+const CACHE = `${PREFIX}v${self.RIDEGUIDE_VERSION}`; // a new version gets a fresh cache
 const NETWORK_TIMEOUT_MS = 4000;
 const SHELL = [
   './', './index.html', './styles.css', './manifest.webmanifest',
-  './src/app.js', './src/engine.js', './src/model.js', './src/storage.js', './src/i18n.js',
+  './src/version.js', './src/app.js', './src/engine.js', './src/model.js', './src/storage.js', './src/i18n.js',
   './src/seed.js', './src/ui.js', './src/views/wizard.js', './src/views/cars.js', './src/views/settings.js',
   './fonts/barlow-latin-400-normal.woff2', './fonts/barlow-latin-500-normal.woff2',
   './fonts/barlow-latin-600-normal.woff2', './fonts/barlow-condensed-latin-600-normal.woff2',

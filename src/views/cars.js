@@ -1,7 +1,8 @@
 // Garage (cars marked as mine), History (every car), a car's own page, and the comparison.
 import { fmt } from '../i18n.js';
 import {
-  el, svg, ICONS, plate, evaluate, priceBlock, factsList, breakdownBar, money, carTitle, carSubline,
+  el, svg, ICONS, plate, evaluate, priceBlock, factsList, breakdownBar, money, plain, carTitle, carSubline,
+  spanPicker,
 } from '../ui.js';
 import { answers } from './wizard.js';
 
@@ -10,7 +11,7 @@ export const MAX_COMPARE = 3;
 function carRow(ctx, car, { selectable = false } = {}) {
   const { state, t } = ctx;
   const lang = state.lang;
-  const r = evaluate(car, state.settings.buffer);
+  const r = evaluate(car, state.settings);
   const selected = ctx.ui.selected.has(car.id);
   const full = !selected && ctx.ui.selected.size >= MAX_COMPARE;
 
@@ -91,7 +92,7 @@ export function renderCar(ctx, id) {
   if (!car) {
     return el('div', { class: 'list-view' }, emptyState(t.car.notFound, t.history.title, '#/history'));
   }
-  const r = evaluate(car, state.settings.buffer);
+  const r = evaluate(car, state.settings);
   const { bar, legend } = breakdownBar(r.parts, t, lang);
 
   const actions = el('div', { class: 'actions stack' },
@@ -124,7 +125,7 @@ export function renderCar(ctx, id) {
       el('p', { class: 'row-sub' }, carSubline(car, t, lang),
         car.mine ? el('span', { class: 'mine-tag' }, t.car.inGarage) : null)),
     priceBlock(r, t, lang),
-    factsList(r, car, t, lang, state.settings.buffer),
+    factsList(r, car, t, lang, state.settings),
     el('h3', {}, t.result.breakdown), bar, legend,
     el('h3', { class: 'answers-title' }, t.car.answers),
     answers(car, t, lang, null),
@@ -135,7 +136,7 @@ export function renderCompare(ctx, ids) {
   const { state, t } = ctx;
   const lang = state.lang;
   const cars = ids.map((id) => state.cars.find((c) => c.id === id)).filter(Boolean).slice(0, MAX_COMPARE);
-  const results = cars.map((c) => evaluate(c, state.settings.buffer));
+  const results = cars.map((c) => evaluate(c, state.settings));
   const priced = results.filter((r) => r.perKm > 0);
   const bestKm = priced.length ? Math.min(...priced.map((r) => r.perKm)) : null;
   const bestMonth = results.length ? Math.min(...results.map((r) => r.perMonth)) : 0;
@@ -153,9 +154,10 @@ export function renderCompare(ctx, ids) {
       priceBlock(r, t, lang, { compact: true }),
       diff > 0.5 ? el('p', { class: 'diff' }, fmt(t.compare.more, { amount: money(diff, lang) })) : null,
       el('dl', { class: 'facts small' },
-        el('div', {}, el('dt', {}, t.result.cashOut), el('dd', {}, money(r.cashOut, lang))),
+        el('div', {}, el('dt', {}, t.result.upfront), el('dd', {}, money(r.upfront, lang))),
+        el('div', {}, el('dt', {}, t.result.cashOut), el('dd', {}, money(r.paidMonthly, lang))),
         el('div', {}, el('dt', {}, `${t.result.spent}`), el('dd', {}, money(r.period, lang))),
-        r.owned && car.price > 0 ? el('div', {}, el('dt', {}, t.result.residual), el('dd', {}, money(r.out.residual, lang))) : null),
+        r.owned && r.residual > 0 ? el('div', {}, el('dt', {}, fmt(t.result.residual, { years: plain(r.months / 12, lang) })), el('dd', {}, money(r.residual, lang))) : null),
       bar);
   });
 
@@ -168,6 +170,7 @@ export function renderCompare(ctx, ids) {
   return el('div', { class: 'compare-view' },
     el('a', { class: 'back', href: '#/history' }, svg(ICONS.back), t.history.title),
     el('header', { class: 'view-head' }, el('h1', {}, t.compare.title)),
+    spanPicker(ctx),
     el('div', { class: `compare-grid n${cols.length}` }, cols),
     legend);
 }

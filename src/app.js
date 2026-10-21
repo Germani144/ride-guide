@@ -13,6 +13,9 @@ const view = document.getElementById('view');
 const tabs = document.getElementById('tabs');
 const settingsLink = document.getElementById('settings-link');
 
+export const VERSION = `v${globalThis.RIDEGUIDE_VERSION ?? '?'}`;
+const SPLASH_MIN_MS = 700; // long enough to read the version on the loading screen
+
 let state;
 const ui = { selecting: false, selected: new Set() }; // per-visit UI state, not saved
 
@@ -140,9 +143,9 @@ function resetToSeed() {
   const s = t();
   if (!confirm(s.settings.confirmReset)) return;
   const lang = state.lang;
-  const buffer = state.settings.buffer;
+  const settings = state.settings;
   state = seedState(lang);
-  state.settings.buffer = buffer;
+  state.settings = settings;
   save();
   toast(s.toast.reset);
   go('#/history');
@@ -181,7 +184,7 @@ function render({ animate = false, back = false } = {}) {
     ui.selected.clear();
   }
   const ctx = {
-    state, t: t(), ui, route, save, go, render, saveDraft, updateCar, deleteCar, editCar,
+    state, t: t(), ui, route, version: VERSION, save, go, render, saveDraft, updateCar, deleteCar, editCar,
     tryOtherMethod, exportBackup, importBackup, resetToSeed,
   };
   document.documentElement.lang = state.lang;
@@ -210,6 +213,13 @@ async function start() {
   save(); // writes migrated data back in the current format
   window.addEventListener('hashchange', () => render());
   render();
+  const splash = document.getElementById('splash');
+  if (splash) {
+    setTimeout(() => {
+      splash.classList.add('hide');
+      setTimeout(() => splash.remove(), 400);
+    }, Math.max(0, SPLASH_MIN_MS - performance.now()));
+  }
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
     navigator.serviceWorker.register('./sw.js', { scope: './', updateViaCache: 'none' }).catch(() => {});
   }

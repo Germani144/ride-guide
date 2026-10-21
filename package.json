@@ -1,11 +1,11 @@
 {
   "name": "ride-guide",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "description": "Compare what cars really cost: lease, buy or finance.",
   "scripts": {
     "start": "python3 -m http.server 8000",
-    "test": "node --test test/engine.test.mjs test/model.test.mjs"
+    "test": "node --test test/engine.test.mjs test/cost.test.mjs test/model.test.mjs"
   }
 }

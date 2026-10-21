@@ -23,6 +23,14 @@
     </a>
   </header>
 
+  <div id="splash" aria-hidden="true">
+    <img src="icons/icon.svg" alt="">
+    <p class="splash-name">RideGuide</p>
+    <p class="splash-version" id="splash-version"></p>
+  </div>
+  <script src="src/version.js"></script>
+  <script>document.getElementById('splash-version').textContent = 'v' + self.RIDEGUIDE_VERSION;</script>
+
   <main id="view" tabindex="-1"></main>
 
   <nav id="tabs" class="tabs" aria-label="Sections"></nav>

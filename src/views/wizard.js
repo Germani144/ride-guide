@@ -1,13 +1,13 @@
 // "New car": the landing page. A decision tree that asks one thing per screen,
 // starting with the most general question (do you have the plate?).
 import {
-  newCar, METHODS, FUELS, COST_FIELDS, DRIVING_FIELDS, RUNNING_FIELDS, ENERGY_DEFAULTS,
+  newCar, METHODS, FUELS, DRIVING_FIELDS, ENERGY_DEFAULTS, costFields, runningFields,
   formatPlate, parseNumber, validate, PERCENT_FIELDS,
 } from '../model.js';
 import { fmt } from '../i18n.js';
 import {
   el, svg, ICONS, euStrip, evaluate, priceBlock, factsList, breakdownBar, toInputText,
-  plain, carTitle,
+  plain, carTitle, spanPicker,
 } from '../ui.js';
 
 const FIRST = 'plate';
@@ -41,9 +41,9 @@ export function startDraft(state, overrides = {}) {
 function fieldsFor(step, car) {
   if (step === 'plateEntry') return ['plate'];
   if (step === 'car') return ['name', 'year'];
-  if (step === 'cost') return COST_FIELDS[car.method];
+  if (step === 'cost') return costFields(car);
   if (step === 'driving') return DRIVING_FIELDS;
-  if (step === 'running') return RUNNING_FIELDS;
+  if (step === 'running') return runningFields(car);
   return [];
 }
 
@@ -179,8 +179,19 @@ function renderForm(ctx, d, advance) {
     form.append(fuelPicker(car, t, ctx));
   }
 
+  // Switches that change which fields are asked; flipping one redraws the step.
+  const switches = [];
+  if (d.step === 'cost' && car.method === 'lease') switches.push('serviceIncluded', 'tyresIncluded');
+  if (d.step === 'cost' && car.method !== 'lease') switches.push('depreciationAuto');
+  if (d.step === 'running' && !(car.method === 'lease' && car.serviceIncluded !== false)) switches.push('maintenanceAuto');
+
   if (['cost', 'driving', 'running'].includes(d.step)) {
-    for (const f of fields) form.append(numberField(f, car, t, lang, ctx, errorNodes, { label: labelKey(f, car) }));
+    const before = d.step === 'cost' && car.method !== 'lease' ? fields.filter((f) => f !== 'depreciationFactor') : fields;
+    for (const f of before) form.append(numberField(f, car, t, lang, ctx, errorNodes, { label: labelKey(f, car) }));
+    for (const key of switches) form.append(switchField(key, car, t, ctx));
+    if (fields.includes('depreciationFactor') && d.step === 'cost') {
+      form.append(numberField('depreciationFactor', car, t, lang, ctx, errorNodes));
+    }
   }
 
   if (hint) form.append(el('p', { class: 'hint step-hint' }, hint));
@@ -236,6 +247,19 @@ function numberField(field, car, t, lang, ctx, errorNodes, { label = field, deci
     errorNodes[field]);
 }
 
+function switchField(key, car, t, ctx) {
+  const [label, help] = t.switches[key];
+  const id = `s-${key}`;
+  return el('div', { class: 'field switch-field' },
+    el('label', { class: 'switch', for: id },
+      el('input', {
+        id, type: 'checkbox', role: 'switch', checked: car[key] !== false && (key !== 'tyresIncluded' || car[key] === true),
+        onchange: (e) => { car[key] = e.target.checked; ctx.save(); ctx.render(); },
+      }),
+      el('span', { class: 'switch-text' }, label)),
+    help ? el('p', { class: 'hint' }, help) : null);
+}
+
 function fuelPicker(car, t, ctx) {
   const group = el('div', { class: 'segmented', role: 'radiogroup', 'aria-label': t.fields.fuel[0] });
   for (const f of FUELS) {
@@ -258,7 +282,7 @@ function renderResult(ctx, d) {
   const { state, t } = ctx;
   const car = d.car;
   const lang = state.lang;
-  const r = evaluate(car, state.settings.buffer);
+  const r = evaluate(car, state.settings);
   const { bar, legend } = breakdownBar(r.parts, t, lang);
   const editing = Boolean(d.editingId);
 
@@ -276,7 +300,8 @@ function renderResult(ctx, d) {
       car.plate ? el('span', { class: 'plate plate-md' }, euStrip(), el('span', { class: 'plate-text' }, car.plate)) : null,
       el('p', { class: 'result-name' }, carTitle(car, t))),
     priceBlock(r, t, lang),
-    factsList(r, car, t, lang, state.settings.buffer),
+    spanPicker(ctx),
+    factsList(r, car, t, lang, state.settings),
     el('h3', {}, t.result.breakdown), bar, legend,
     answers(car, t, lang, change),
     el('div', { class: 'actions stack' },
@@ -295,6 +320,7 @@ export function answers(car, t, lang, onChange) {
     return `${plain(n, lang)}${unit ? ` ${unit}` : ''}`;
   };
   const row = (f) => el('div', {}, el('dt', {}, t.fields[labelKey(f, car)][0]), el('dd', {}, val(f)));
+  const flag = (key) => el('div', {}, el('dt', {}, t.switches[key][0]), el('dd', {}, car[key] === true || (car[key] !== false && key !== 'tyresIncluded') ? t.yes : t.no));
   const groups = [
     ['car', 'plate', [
       el('div', {}, el('dt', {}, t.fields.name[0]), el('dd', {}, carTitle(car, t))),
@@ -304,10 +330,14 @@ export function answers(car, t, lang, onChange) {
     ]],
     ['payment', 'method', [
       el('div', {}, el('dt', {}, t.result.methodLabel), el('dd', {}, t.steps.method[car.method][0])),
-      ...COST_FIELDS[car.method].map(row),
+      ...costFields(car).map(row),
+      ...(car.method === 'lease' ? ['serviceIncluded', 'tyresIncluded'] : ['depreciationAuto']).map(flag),
     ]],
     ['driving', 'driving', DRIVING_FIELDS.map(row)],
-    ['running', 'running', RUNNING_FIELDS.map(row)],
+    ['running', 'running', [
+      ...runningFields(car).map(row),
+      car.method === 'lease' && car.serviceIncluded !== false ? null : flag('maintenanceAuto'),
+    ]],
   ];
   return el('div', { class: 'answers' }, groups.map(([key, step, rows]) =>
     el('section', { class: 'answer-group' },

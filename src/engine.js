@@ -1,33 +1,88 @@
 // RideGuide cost engine.
-// Faithful port of the "car_comparison" tab (newer column formulas, Fiesta onward).
-// Pure functions only: no DOM, no storage, no network. Safe to run in a browser,
-// Node, or a future backend without changes.
+// Simulates a car month by month over one shared time span, so lease, cash and finance are
+// compared over the same period. Every payment is discounted at the return your money could
+// earn (compounding), which both counts the money tied up in a car and makes a big payment
+// now comparable with small payments later. The result is the equivalent fixed monthly cost.
+//
+// Pure functions only: no DOM, no storage, no network. Safe to run in a browser, Node, or a
+// future backend without changes. The spreadsheet's formulas live on in engine-sheet.js.
 
-export const DEFAULT_BUFFER = 0.15; // sheet row "Projection per month": owned cars get +15%
+// Settings the user can change (Settings page). Prices are Danish, in today's money (2026).
+export const DEFAULT_SETTINGS = {
+  years: 5,               // time span every car is compared over
+  returnRate: 0.04,       // yearly return on money you don't spend on the car (compounding)
+  buffer: 0.05,           // safety margin on owned cars
+  energyGrowth: 0,        // yearly change in fuel and electricity prices
+  evPublicShare: 0.2,     // share of charging done at public chargers
+  evPublicPrice: 3.5,     // kr per kWh at public fast chargers
+  evWinterExtra: 0.1,     // extra energy use over the year for electric cars (cold weather)
+  tyreSetPrice: 3500,     // four tyres including fitting
+  tyreLifeKm: 30000,
+  tyreLifeKmEv: 25000,    // heavier cars with instant torque wear tyres faster
+  winterTyres: false,     // a second set, swapped twice a year
+  tyreSwapPrice: 400,
+  inspectionPrice: 500,   // periodic inspection (syn): at 4 years, then every 2 years
+  roadsideYear: 600,      // roadside assistance for cars you own (included in leases)
+  washingMo: 100,
+};
+
+// Value curve: a bigger loss in the first year, then a steady yearly loss.
+// Driving more than KM_NORM per year adds KM_RATE to the yearly loss per KM_STEP km.
+export const VALUE_CURVE = {
+  petrol: { firstYear: 0.20, yearly: 0.12 },
+  diesel: { firstYear: 0.20, yearly: 0.12 },
+  electric: { firstYear: 0.22, yearly: 0.13 },
+  kmNorm: 15000, kmStep: 5000, kmRate: 0.01, min: 0.04, max: 0.30,
+};
+
+// Maintenance and repairs (tyres not included): a yearly base plus a cost per km,
+// growing with the car's age.
+export const MAINTENANCE = {
+  petrol: { baseYear: 3000, perKm: 0.25 },
+  diesel: { baseYear: 3500, perKm: 0.25 },
+  electric: { baseYear: 2000, perKm: 0.15 },
+  ageGrowth: 0.08, maxAge: 15,
+};
+
+// Share of the insurance premium that follows the car's value (the rest is fixed).
+export const INSURANCE_VALUE_SHARE = 0.5;
+export const INSPECTION = { firstAge: 4, every: 2 };
+
+// Order of the parts in the breakdown.
+export const PART_KEYS = [
+  'lease', 'depreciation', 'capital', 'interest', 'energy', 'insurance', 'greenTax',
+  'maintenance', 'tyres', 'other', 'parking', 'buffer',
+];
 
 /**
  * @typedef {Object} CarInput
- * @property {string} name
- * @property {number} year
- * @property {number} yearsOfUse        years you keep the car (fractions allowed, e.g. 9/12)
- * @property {number} downPayment       fraction of price paid up front (0..1); the rest is financed
- * @property {number} oneTimePayment    lease up-front payment, spread over the period
- * @property {number} returnFee         lease return fee ("Tilbageleveringsgebyr"), spread over the period
- * @property {number} depreciationFactor yearly value loss as a fraction, e.g. 0.03
- * @property {number} kmPerUnit         km per litre (or km per kWh)
- * @property {number} pricePerUnit      kr per litre (or per kWh)
+ * @property {'cash'|'finance'|'lease'} method
+ * @property {'petrol'|'diesel'|'electric'} fuel
+ * @property {number} age               car's age in years when you get it (0 = new)
+ * @property {number} price             purchase price (owned cars)
+ * @property {number} downPayment       fraction of price paid up front (1 = cash)
+ * @property {number} apr               ÅOP as a fraction
+ * @property {number} financeMonths
+ * @property {boolean} depreciationAuto use the value curve; otherwise depreciationFactor
+ * @property {number} depreciationFactor yearly loss for the manual mode: value = price / (1+f)^years
+ * @property {number} leaseMo
+ * @property {number} oneTimePayment   paid at the start of each lease
+ * @property {number} returnFee        paid at the end of each lease
+ * @property {number} leaseYears       lease period; leases renew to fill the time span
+ * @property {boolean} serviceIncluded lease covers maintenance and inspection
+ * @property {boolean} tyresIncluded   lease covers tyres
  * @property {number} kmPerYear
- * @property {number} insuranceMo
+ * @property {number} kmPerUnit         km per litre (or km per kWh)
+ * @property {number} pricePerUnit      kr per litre (or kr per kWh at home)
+ * @property {number} insuranceMo       today's premium per month
  * @property {number} greenTaxMo
+ * @property {boolean} maintenanceAuto  use the maintenance curve; otherwise maintenanceMo
  * @property {number} maintenanceMo
  * @property {number} parkingMo
- * @property {number} leaseMo
- * @property {number} apr               ÅOP as a fraction, e.g. 0.05
- * @property {number} financeMonths
- * @property {number} price
  */
 
 const num = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : 0);
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
 // Excel PMT with fv = 0, returned as a positive payment for a positive loan.
 export function pmt(ratePerPeriod, nper, pv) {
@@ -36,98 +91,167 @@ export function pmt(ratePerPeriod, nper, pv) {
   return (pv * ratePerPeriod) / (1 - Math.pow(1 + ratePerPeriod, -nper));
 }
 
-// Excel IPMT, returned as a negative number like Excel does for a positive loan.
-// Periods outside 1..nper give 0 (the sheet wraps IPMT in IFERROR(..., 0)).
-export function ipmt(ratePerPeriod, period, nper, pv) {
-  if (!nper || !pv || period < 1 || period > nper) return 0;
-  if (ratePerPeriod === 0) return 0;
-  const payment = pmt(ratePerPeriod, nper, pv);
-  const growth = Math.pow(1 + ratePerPeriod, period - 1);
-  const balanceBefore = pv * growth - (payment * (growth - 1)) / ratePerPeriod;
-  return -(balanceBefore * ratePerPeriod);
+export function yearlyValueLoss(fuel, kmPerYear) {
+  const c = VALUE_CURVE[fuel] ?? VALUE_CURVE.petrol;
+  const extra = (VALUE_CURVE.kmRate * (num(kmPerYear) - VALUE_CURVE.kmNorm)) / VALUE_CURVE.kmStep;
+  return clamp(c.yearly + extra, VALUE_CURVE.min, VALUE_CURVE.max);
+}
+
+// Share of the new price left at a given age (years).
+export function valueCurve(fuel, kmPerYear, age) {
+  const c = VALUE_CURVE[fuel] ?? VALUE_CURVE.petrol;
+  const a = Math.max(0, age);
+  if (a < 1) return 1 - c.firstYear * a;
+  return (1 - c.firstYear) * Math.pow(1 - yearlyValueLoss(fuel, kmPerYear), a - 1);
+}
+
+// Number of inspections a car has had by a given age.
+function inspectionsBy(age) {
+  if (age < INSPECTION.firstAge - 1e-9) return 0;
+  return Math.floor((age - INSPECTION.firstAge + 1e-9) / INSPECTION.every) + 1;
 }
 
 /**
  * @param {CarInput} input
- * @param {{buffer?: number}} [opts]
+ * @param {Partial<typeof DEFAULT_SETTINGS>} [settings]
  */
-export function calculate(input, opts = {}) {
-  const buffer = opts.buffer ?? DEFAULT_BUFFER;
-  const years = num(input.yearsOfUse);
-  const months = 12 * years;
-  const price = num(input.price);
-  const apr = num(input.apr);
-  const financeMonths = num(input.financeMonths);
-  const kmPerYear = num(input.kmPerYear);
-  const kmMo = kmPerYear / 12;
+export function calculate(input, settings = {}) {
+  const s = { ...DEFAULT_SETTINGS, ...settings };
+  const months = Math.max(1, Math.round(num(s.years) * 12));
+  const rm = Math.pow(1 + num(s.returnRate), 1 / 12) - 1; // monthly rate, compounding
+  const disc = (k) => Math.pow(1 + rm, -k);
+  let annuity = 0; // value today of 1 kr paid at the end of every month
+  for (let k = 1; k <= months; k++) annuity += disc(k);
 
-  const fuelPerKm = num(input.kmPerUnit) ? num(input.pricePerUnit) / num(input.kmPerUnit) : 0;
-  const fuelMo = kmMo * fuelPerKm;
+  const lease = input.method === 'lease';
+  const owned = !lease;
+  const fuel = VALUE_CURVE[input.fuel] ? input.fuel : 'petrol';
+  const electric = fuel === 'electric';
+  const kmYear = num(input.kmPerYear);
+  const kmMo = kmYear / 12;
+  const age0 = Math.max(0, num(input.age));
+  const price = owned ? num(input.price) : 0;
 
-  // Depreciation: (price - price / (1 + f)^years) / months
-  const deprMo = months
-    ? (price - price / Math.pow(1 + num(input.depreciationFactor), years)) / months
-    : 0;
-  const residual = price - deprMo * months;
+  const valueAt = (years) => {
+    if (!price) return 0;
+    if (input.depreciationAuto === false) return price / Math.pow(1 + num(input.depreciationFactor), years);
+    return (price * valueCurve(fuel, kmYear, age0 + years)) / valueCurve(fuel, kmYear, age0);
+  };
 
-  // Finance: -PMT(apr/12, period, price - downPayment * price)
-  const loan = price - num(input.downPayment) * price;
-  const financeMo = financeMonths ? pmt(apr / 12, financeMonths, loan) : 0;
+  const pv = {};   // value today of each part
+  const paid = {}; // plain sum paid within the time span
+  const add = (key, amount, k) => {
+    if (!amount) return;
+    pv[key] = (pv[key] || 0) + amount * disc(k);
+    paid[key] = (paid[key] || 0) + amount;
+  };
 
-  const oneTimeMo = months ? num(input.oneTimePayment) / months : 0;
-  const returnFeeMo = months ? num(input.returnFee) / months : 0;
-
-  const fixed =
-    num(input.insuranceMo) +
-    num(input.greenTaxMo) +
-    financeMo +
-    deprMo +
-    num(input.leaseMo) +
-    returnFeeMo +
-    num(input.parkingMo) +
-    oneTimeMo;
-  const variable = fuelMo + num(input.maintenanceMo);
-
-  // Equity credit for financed cars: part of what you pay in instalments is not a cost
-  // because you own the car's residual value. Interest paid in the period is added back.
-  let credit = 0;
-  if (apr !== 0 && months) {
-    let interestSum = 0; // negative, like Excel IPMT
-    const last = Math.floor(months);
-    for (let k = 1; k <= last; k++) interestSum += ipmt(apr / 12, k, financeMonths, loan);
-    const residualShare = price ? residual / price : 0;
-    credit = (financeMo * months * residualShare + interestSum) / months;
+  // ----- owning: price, loan, sale at the end -----
+  let upfront = 0;
+  let residual = 0;
+  let loanLeft = 0;
+  let interestPaid = 0;
+  let capitalPv = 0;
+  let instalments = 0;
+  if (owned && price) {
+    const down = input.method === 'cash' ? price : clamp(num(input.downPayment), 0, 1) * price;
+    const loan = price - down;
+    const apr = num(input.apr);
+    const n = Math.round(num(input.financeMonths));
+    const payment = loan > 0 && n > 0 ? pmt(apr / 12, n, loan) : 0;
+    let balance = loan;
+    upfront = down;
+    capitalPv = down;
+    for (let k = 1; k <= months; k++) {
+      if (k > n || balance <= 1e-9) break;
+      const interest = balance * (apr / 12);
+      balance -= payment - interest;
+      interestPaid += interest;
+      instalments += payment;
+      capitalPv += payment * disc(k);
+    }
+    loanLeft = Math.max(0, balance);
+    residual = valueAt(months / 12);
+    capitalPv += (loanLeft - residual) * disc(months);
   }
-  const total = fixed + variable - credit;
 
-  const isLease = num(input.leaseMo) !== 0;
-  const cashflow = -(isLease ? total : fixed + variable);
-  const projection = isLease ? total : total * (1 + buffer);
-  const kmCost = kmMo ? projection / kmMo : 0;
-  const spent = total * months;
+  // ----- leasing: renews to fill the time span; a last partial lease counts pro rata -----
+  let leaseFirst = 0;
+  if (lease) {
+    const L = Math.max(1, Math.round(num(input.leaseYears) * 12));
+    for (let start = 0; start < months; start += L) {
+      const share = Math.min(L, months - start) / L;
+      const oneTime = num(input.oneTimePayment) * share;
+      if (start === 0) leaseFirst = oneTime;
+      else add('lease', oneTime, start);
+      add('lease', num(input.returnFee) * share, Math.min(start + L, months));
+    }
+    upfront = leaseFirst;
+  }
 
-  const base = -cashflow || 1;
-  const shares = {
-    finance: financeMo / base,
-    energy: fuelMo / base,
-    greenTax: num(input.greenTaxMo) / base,
-    depreciation: deprMo / base,
-    parking: num(input.parkingMo) / base,
-    maintenance: num(input.maintenanceMo) / base,
-    insurance: num(input.insuranceMo) / base,
-  };
+  // ----- month by month -----
+  const life = electric ? s.tyreLifeKmEv : s.tyreLifeKm;
+  const unitPrice = electric
+    ? (1 - num(s.evPublicShare)) * num(input.pricePerUnit) + num(s.evPublicShare) * num(s.evPublicPrice)
+    : num(input.pricePerUnit);
+  const kmPerUnit = electric ? num(input.kmPerUnit) / (1 + num(s.evWinterExtra)) : num(input.kmPerUnit);
+  const m = MAINTENANCE[fuel];
+  const serviceByLease = lease && input.serviceIncluded !== false;
+  const tyresByLease = lease && input.tyresIncluded === true;
 
+  for (let k = 1; k <= months; k++) {
+    const mid = (k - 0.5) / 12;          // years since you got the car, mid-month
+    const age = age0 + mid;
+    if (lease) add('lease', num(input.leaseMo), k);
+    const growth = Math.pow(1 + num(s.energyGrowth), (k - 1) / 12);
+    add('energy', kmPerUnit ? (kmMo / kmPerUnit) * unitPrice * growth : 0, k);
+
+    const ins = num(input.insuranceMo);
+    const insShare = owned && price ? 1 - INSURANCE_VALUE_SHARE + (INSURANCE_VALUE_SHARE * valueAt(mid)) / price : 1;
+    add('insurance', ins * insShare, k);
+    add('greenTax', num(input.greenTaxMo), k);
+    add('parking', num(input.parkingMo), k);
+
+    if (!serviceByLease) {
+      const maint = input.maintenanceAuto === false
+        ? num(input.maintenanceMo)
+        : ((m.baseYear + m.perKm * kmYear) / 12) * (1 + MAINTENANCE.ageGrowth * Math.min(age, MAINTENANCE.maxAge));
+      add('maintenance', maint, k);
+      if (inspectionsBy(age0 + k / 12) > inspectionsBy(age0 + (k - 1) / 12)) add('other', num(s.inspectionPrice), k);
+    }
+    if (!tyresByLease) {
+      add('tyres', (kmMo * num(s.tyreSetPrice)) / (num(life) || 1) + (s.winterTyres ? (2 * num(s.tyreSwapPrice)) / 12 : 0), k);
+    }
+    if (owned) add('other', num(s.roadsideYear) / 12, k);
+    add('other', num(s.washingMo), k);
+  }
+
+  // ----- equivalent monthly cost per part -----
+  const eq = (v) => (v || 0) / annuity;
+  const parts = Object.fromEntries(PART_KEYS.map((key) => [key, 0]));
+  for (const key of Object.keys(pv)) parts[key] = eq(pv[key]);
+  if (lease) parts.lease += eq(leaseFirst);
+  if (owned && price) {
+    // Capital cost split into the plain loss in value, loan interest, and what the money tied
+    // up in the car would have earned (negative when paying later beats paying now).
+    parts.depreciation = (price - residual) / months;
+    parts.interest = interestPaid / months;
+    parts.capital = eq(capitalPv) - parts.depreciation - parts.interest;
+  }
+  if (owned) {
+    const before = PART_KEYS.reduce((a, key) => a + parts[key], 0);
+    parts.buffer = num(s.buffer) * before;
+  }
+
+  const perMonth = PART_KEYS.reduce((a, key) => a + parts[key], 0);
+  const paidRunning = Object.values(paid).reduce((a, v) => a + v, 0);
   return {
-    months, kmMo, fuelPerKm, fuelMo, deprMo, residual, financeMo,
-    fixed, variable, total, cashflow, projection, kmCost, spent, shares,
-  };
-}
-
-export function emptyCar(name = 'New car') {
-  return {
-    name, year: new Date().getFullYear(), yearsOfUse: 3, downPayment: 1, oneTimePayment: 0,
-    returnFee: 0, depreciationFactor: 0, kmPerUnit: 15, pricePerUnit: 13, kmPerYear: 12000,
-    insuranceMo: 0, greenTaxMo: 0, maintenanceMo: 0, parkingMo: 0, leaseMo: 0, apr: 0,
-    financeMonths: 0, price: 0,
+    months, kmMo, owned, parts, perMonth,
+    perKm: kmMo ? perMonth / kmMo : 0,
+    period: perMonth * months,
+    upfront,
+    paidMonthly: (paidRunning + instalments) / months,
+    residual, loanLeft, interestPaid,
+    yearlyValueLoss: yearlyValueLoss(fuel, kmYear),
   };
 }

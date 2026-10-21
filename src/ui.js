@@ -1,7 +1,7 @@
 // Small DOM helpers and shared pieces of interface. User text only ever goes in via
 // textContent or input values, never as HTML.
-import { calculate } from './engine.js';
-import { toEngineInput, costParts, PART_KEYS, PERCENT_FIELDS } from './model.js';
+import { calculate, PART_KEYS } from './engine.js';
+import { toEngineInput, PERCENT_FIELDS } from './model.js';
 import { fmt } from './i18n.js';
 
 export function el(tag, attrs = {}, ...children) {
@@ -55,22 +55,16 @@ export function toInputText(field, v, lang) {
 
 // ---------- results ----------
 
-export function evaluate(car, buffer) {
-  const input = toEngineInput(car);
-  const out = calculate(input, { buffer });
-  const owned = car.method !== 'lease';
-  return {
-    input, out, owned,
-    perMonth: out.projection,
-    perKm: out.kmCost,
-    cashOut: -out.cashflow,
-    period: out.projection * out.months,
-    parts: costParts(input, out),
-  };
+// Everything the views show about a car, under the user's settings.
+export function evaluate(car, settings) {
+  const out = calculate(toEngineInput(car), settings);
+  return { ...out, out };
 }
 
+// Parts below zero (a loan can beat paying cash) are listed as savings but left out of the bar.
 export function breakdownBar(parts, t, lang) {
-  const items = PART_KEYS.map((k) => [k, Math.max(0, parts[k] || 0)]).filter(([, v]) => v > 0.5);
+  const all = PART_KEYS.map((k) => [k, parts[k] || 0]).filter(([, v]) => Math.abs(v) > 0.5);
+  const items = all.filter(([, v]) => v > 0);
   const sum = items.reduce((a, [, v]) => a + v, 0) || 1;
   const bar = el('div', { class: 'bar', role: 'img' });
   bar.setAttribute('aria-label', items.map(([k, v]) => `${t.shares[k]} ${Math.round((v / sum) * 100)}%`).join(', '));
@@ -80,10 +74,10 @@ export function breakdownBar(parts, t, lang) {
     bar.append(seg);
   }
   const legend = el('ul', { class: 'legend' },
-    items.sort((a, b) => b[1] - a[1]).map(([k, v]) =>
-      el('li', {},
+    all.sort((a, b) => b[1] - a[1]).map(([k, v]) =>
+      el('li', { class: v < 0 ? 'saving' : null },
         el('i', { class: `part-${k}` }),
-        el('span', { class: 'legend-name' }, t.shares[k]),
+        el('span', { class: 'legend-name' }, v < 0 ? (t.sharesNegative[k] ?? t.shares[k]) : t.shares[k]),
         el('span', { class: 'legend-val' }, `${money(v, lang)} ${t.fields.price[1]}`))));
   return { bar, legend };
 }
@@ -99,18 +93,36 @@ export function priceBlock(r, t, lang, { compact = false } = {}) {
       ` ${t.result.perMonth}`));
 }
 
-export function factsList(r, car, t, lang, buffer) {
+export function factsList(r, car, t, lang, settings) {
+  const kr = t.fields.price[1];
+  const years = plain(r.months / 12, lang);
   const rows = [
-    [t.result.cashOut, `${money(r.cashOut, lang)} ${t.fields.price[1]}`],
-    [`${t.result.spent} (${fmt(t.result.period, { years: plain(car.yearsOfUse, lang) })})`, `${money(r.period, lang)} ${t.fields.price[1]}`],
-  ];
-  if (r.owned && (car.price > 0)) rows.push([t.result.residual, `${money(r.out.residual, lang)} ${t.fields.price[1]}`]);
+    r.upfront > 0.5 ? [t.result.upfront, `${money(r.upfront, lang)} ${kr}`] : null,
+    [t.result.cashOut, `${money(r.paidMonthly, lang)} ${kr}`],
+    [`${t.result.spent} (${fmt(t.result.period, { years })})`, `${money(r.period, lang)} ${kr}`],
+    r.owned && r.residual > 0 ? [fmt(t.result.residual, { years }), `${money(r.residual, lang)} ${kr}`] : null,
+    r.loanLeft > 0.5 ? [t.result.loanLeft, `${money(r.loanLeft, lang)} ${kr}`] : null,
+  ].filter(Boolean);
   const list = el('dl', { class: 'facts' },
     rows.map(([k, v]) => el('div', {}, el('dt', {}, k), el('dd', {}, v))));
-  const note = r.owned && buffer > 0
-    ? el('p', { class: 'note' }, fmt(t.result.bufferNote, { pct: plain(buffer * 100, lang) }))
-    : null;
+  const note = el('p', { class: 'note' }, fmt(r.owned && settings.buffer > 0 ? t.result.noteOwned : t.result.note, {
+    years, rate: plain(settings.returnRate * 100, lang), pct: plain(settings.buffer * 100, lang),
+  }));
   return [list, note];
+}
+
+// The shared time span every car is compared over. Changing it here changes the setting.
+export const SPAN_CHOICES = [3, 4, 5, 6, 8, 10];
+export function spanPicker(ctx) {
+  const { state, t } = ctx;
+  const years = state.settings.years;
+  return el('div', { class: 'field span-field' },
+    el('span', { class: 'label' }, t.compare.span),
+    el('div', { class: 'segmented', role: 'radiogroup', 'aria-label': t.compare.span },
+      SPAN_CHOICES.map((y) => el('button', {
+        type: 'button', role: 'radio', 'aria-checked': String(y === years),
+        onclick: () => { state.settings.years = y; ctx.save(); ctx.render(); },
+      }, String(y)))));
 }
 
 // ---------- plate ----------

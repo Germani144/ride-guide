@@ -1,19 +1,25 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { calculate } from '../src/engine.js';
+import { readFileSync } from 'node:fs';
+import { calculate, DEFAULT_SETTINGS, PART_KEYS } from '../src/engine.js';
 import {
   sanitizeCar, toEngineInput, migrate, formatPlate, parseNumber, validate, newCar, inferMethod,
+  costFields, runningFields, STATE_VERSION,
 } from '../src/model.js';
 import { SEED_CARS } from '../src/seed.js';
 
-test('seed cars give the same results through the model as straight from the sheet', () => {
+test('every seed car gives finite results through the model', () => {
   for (const seed of SEED_CARS) {
-    const direct = calculate(seed);
-    const viaModel = calculate(toEngineInput(sanitizeCar(seed)));
-    for (const k of ['total', 'kmCost', 'fixed', 'variable', 'cashflow', 'spent']) {
-      assert.ok(Math.abs(direct[k] - viaModel[k]) < 1e-9, `${seed.name} ${k}`);
-    }
+    const out = calculate(toEngineInput(sanitizeCar(seed), { year: 2026 }));
+    assert.ok(Number.isFinite(out.perMonth) && out.perMonth > 0, seed.name);
+    assert.ok(Number.isFinite(out.perKm), seed.name);
   }
+});
+
+test('the app version is the same in version.js and package.json', () => {
+  const js = readFileSync(new URL('../src/version.js', import.meta.url), 'utf8');
+  const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+  assert.equal(js.match(/RIDEGUIDE_VERSION = '([^']+)'/)[1], pkg.version);
 });
 
 test('payment method is inferred from the sheet columns', () => {
@@ -32,21 +38,26 @@ test('fields of other methods do not count', () => {
   const lease = toEngineInput(car);
   assert.equal(lease.price, 0);
   assert.equal(lease.financeMonths, 0);
+  assert.equal(lease.leaseYears, 3);
   const cash = toEngineInput({ ...car, method: 'cash' });
   assert.equal(cash.leaseMo, 0);
   assert.equal(cash.downPayment, 1);
   assert.equal(cash.price, 300000);
+  assert.equal(cash.leaseYears, 0);
   const fin = toEngineInput({ ...car, method: 'finance' });
   assert.equal(fin.apr, 0.05);
   assert.equal(fin.leaseMo, 0);
+  assert.equal(toEngineInput({ ...car, year: 2020 }, { year: 2026 }).age, 6);
+  assert.equal(toEngineInput({ ...car, year: 0 }, { year: 2026 }).age, 0);
 });
 
 test('migrates the v0.1 grid state and keeps settings', () => {
   const v1 = { version: 1, lang: 'da', settings: { buffer: 0.1 }, cars: SEED_CARS.map((c) => ({ id: 'x' + c.name, ...c })) };
   const s = migrate(v1);
-  assert.equal(s.version, 2);
+  assert.equal(s.version, STATE_VERSION);
   assert.equal(s.lang, 'da');
   assert.equal(s.settings.buffer, 0.1);
+  assert.equal(s.settings.returnRate, DEFAULT_SETTINGS.returnRate);
   assert.equal(s.cars.length, SEED_CARS.length);
   assert.ok(s.cars.every((c) => c.mine === false && c.method));
   assert.equal(migrate({ nope: true }), null);
@@ -82,13 +93,39 @@ test('validation follows the payment method', () => {
   assert.deepEqual(validate(newCar({ name: 'Ok' }), ['name']), {});
 });
 
-test('breakdown parts add up to the cash paid out per month', async () => {
-  const { costParts, PART_KEYS } = await import('../src/model.js');
+test('v2 data moves to v3: new switches on, the old 15% buffer becomes the new default', () => {
+  const v2 = { version: 2, lang: 'en', settings: { buffer: 0.15 }, cars: [{ name: 'Old', method: 'cash', price: 100000, depreciationFactor: 0.03 }] };
+  const s = migrate(v2);
+  assert.equal(s.version, 3);
+  assert.equal(s.settings.buffer, DEFAULT_SETTINGS.buffer);
+  assert.equal(s.settings.years, DEFAULT_SETTINGS.years);
+  const car = s.cars[0];
+  assert.equal(car.depreciationAuto, true);
+  assert.equal(car.maintenanceAuto, true);
+  assert.equal(car.depreciationFactor, 0.03, 'the old value is kept for the manual mode');
+  // A buffer the user changed is kept, and junk settings fall back to defaults.
+  const kept = migrate({ version: 2, settings: { buffer: 0.08, years: -1, returnRate: 'x' }, cars: [] });
+  assert.equal(kept.settings.buffer, 0.08);
+  assert.equal(kept.settings.years, DEFAULT_SETTINGS.years);
+  assert.equal(kept.settings.returnRate, DEFAULT_SETTINGS.returnRate);
+});
+
+test('switches decide which fields are asked', () => {
+  const cash = newCar({ method: 'cash' });
+  assert.deepEqual(costFields(cash), ['price']);
+  assert.deepEqual(costFields({ ...cash, depreciationAuto: false }), ['price', 'depreciationFactor']);
+  assert.ok(!runningFields(cash).includes('maintenanceMo'));
+  assert.ok(runningFields({ ...cash, maintenanceAuto: false }).includes('maintenanceMo'));
+  const lease = newCar({ method: 'lease', maintenanceAuto: false });
+  assert.ok(!runningFields(lease).includes('maintenanceMo'), 'service included in the lease');
+  assert.ok(runningFields({ ...lease, serviceIncluded: false }).includes('maintenanceMo'));
+  assert.ok(costFields(lease).includes('yearsOfUse'));
+});
+
+test('breakdown parts add up to the monthly cost', () => {
   for (const seed of SEED_CARS) {
-    const input = toEngineInput(sanitizeCar(seed));
-    const out = calculate(input);
-    const parts = costParts(input, out);
-    const sum = PART_KEYS.reduce((a, k) => a + parts[k], 0);
-    assert.ok(Math.abs(sum - (out.fixed + out.variable)) < 1e-6, `${seed.name}: ${sum} vs ${out.fixed + out.variable}`);
+    const out = calculate(toEngineInput(sanitizeCar(seed), { year: 2026 }));
+    const sum = PART_KEYS.reduce((a, k) => a + out.parts[k], 0);
+    assert.ok(Math.abs(sum - out.perMonth) < 1e-6, `${seed.name}: ${sum} vs ${out.perMonth}`);
   }
 });
