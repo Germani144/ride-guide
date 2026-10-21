@@ -27,13 +27,17 @@ export const DEFAULT_SETTINGS = {
   washingMo: 100,
 };
 
-// Value curve: a bigger loss in the first year, then a steady yearly loss.
-// Driving more than KM_NORM per year adds KM_RATE to the yearly loss per KM_STEP km.
+// Value curve: a bigger loss in the first year, then a yearly loss that shrinks as the car ages,
+// from `start` (in the second year) towards `floor`, with time constant `tau` years:
+//   yearly loss at age a = floor + (start - floor) * e^(-(a - 1) / tau)
+// Driving more than kmNorm per year adds kmRate to the yearly loss per kmStep km (less if you
+// drive less). Calibrated so a 10-15 year old car loses about 6-7% a year, as Danish market
+// values do (TjekBil's estimates for a 2016 car: 81,000 -> 58,000 kr over 5 years).
 export const VALUE_CURVE = {
-  petrol: { firstYear: 0.20, yearly: 0.12 },
-  diesel: { firstYear: 0.20, yearly: 0.12 },
-  electric: { firstYear: 0.22, yearly: 0.13 },
-  kmNorm: 15000, kmStep: 5000, kmRate: 0.01, min: 0.04, max: 0.30,
+  petrol: { firstYear: 0.20, start: 0.15, floor: 0.06 },
+  diesel: { firstYear: 0.20, start: 0.15, floor: 0.06 },
+  electric: { firstYear: 0.22, start: 0.17, floor: 0.07 },
+  tau: 4, kmNorm: 15000, kmStep: 5000, kmRate: 0.01, min: 0.03, max: 0.30,
 };
 
 // Maintenance and repairs (tyres not included): a yearly base plus a cost per km,
@@ -92,18 +96,25 @@ export function pmt(ratePerPeriod, nper, pv) {
   return (pv * ratePerPeriod) / (1 - Math.pow(1 + ratePerPeriod, -nper));
 }
 
-export function yearlyValueLoss(fuel, kmPerYear) {
+// Yearly loss in value at a given age (years, 1 or more), adjusted for km per year.
+export function yearlyValueLoss(fuel, kmPerYear, age = 1) {
   const c = VALUE_CURVE[fuel] ?? VALUE_CURVE.petrol;
+  const base = c.floor + (c.start - c.floor) * Math.exp(-(Math.max(1, age) - 1) / VALUE_CURVE.tau);
   const extra = (VALUE_CURVE.kmRate * (num(kmPerYear) - VALUE_CURVE.kmNorm)) / VALUE_CURVE.kmStep;
-  return clamp(c.yearly + extra, VALUE_CURVE.min, VALUE_CURVE.max);
+  return clamp(base + extra, VALUE_CURVE.min, VALUE_CURVE.max);
 }
 
-// Share of the new price left at a given age (years).
+// Share of the new price left at a given age (years). After the first year the yearly loss
+// changes with age, so the value is built up month by month.
 export function valueCurve(fuel, kmPerYear, age) {
   const c = VALUE_CURVE[fuel] ?? VALUE_CURVE.petrol;
   const a = Math.max(0, age);
   if (a < 1) return 1 - c.firstYear * a;
-  return (1 - c.firstYear) * Math.pow(1 - yearlyValueLoss(fuel, kmPerYear), a - 1);
+  const n = Math.max(1, Math.ceil((a - 1) * 12));
+  const h = (a - 1) / n;
+  let log = Math.log(1 - c.firstYear);
+  for (let i = 0; i < n; i++) log += h * Math.log(1 - yearlyValueLoss(fuel, kmPerYear, 1 + (i + 0.5) * h));
+  return Math.exp(log);
 }
 
 // Number of inspections a car has had by a given age.
@@ -253,6 +264,6 @@ export function calculate(input, settings = {}) {
     upfront,
     paidMonthly: (paidRunning + instalments) / months,
     residual, loanLeft, interestPaid,
-    yearlyValueLoss: yearlyValueLoss(fuel, kmYear),
+    yearlyValueLoss: yearlyValueLoss(fuel, kmYear, Math.max(1, age0)),
   };
 }

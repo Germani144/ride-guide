@@ -83,7 +83,7 @@ All prices are in today's money.
 
 | Part | How it is calculated |
 |---|---|
-| Loss in value | price − value at the end, spread evenly per month. Value curve: −20% in the first year, then −12% a year (electric: −22%, then −13%). The yearly rate goes up 1 point per 5,000 km above 15,000 km a year (limits 4–30%). A used car continues from its age (model year). Manual mode: value = price ÷ (1 + yearly rate)^years. |
+| Loss in value | price − value at the end, spread evenly per month. Value curve: −20% in the first year, then a yearly loss that shrinks with age: 6% + 9% × e^(−(age − 1) ÷ 4), so 15% in the second year, about 9% at 5 years and about 6–7% for cars over 10 (electric: −22%, then 7% + 10% × the same). The yearly rate goes up 1 point per 5,000 km above 15,000 km a year, and down when you drive less (limits 3–30%). Checked against TjekBil's market values for a 2016 car. A used car continues from its age (model year). Manual mode: value = price ÷ (1 + yearly rate)^years. |
 | Money tied up in the car | equivalent monthly cost of (down payment + instalments + loan left at the end − sale value) at the return rate, minus loss in value and interest. Negative ("saved by paying later") when a cheap loan beats paying cash. |
 | Loan interest | interest paid within the span, spread per month. Instalments follow PMT(ÅOP ÷ 12, loan period, loan). |
 | Lease | monthly lease + one-time payment at each start + return fee at each end, discounted. |

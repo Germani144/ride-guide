@@ -12,17 +12,22 @@ const base = {
 const bare = { buffer: 0, returnRate: 0, tyreSetPrice: 0, inspectionPrice: 0, roadsideYear: 0, washingMo: 0 };
 const noRunning = { ...base, kmPerUnit: 0, maintenanceAuto: false, maintenanceMo: 0 };
 
-test('value curve: a bigger first-year loss, then a steady yearly loss', () => {
+test('value curve: a bigger first-year loss, then a yearly loss that shrinks with age', () => {
   near(valueCurve('petrol', 15000, 0), 1, 1e-12, 'new');
   near(valueCurve('petrol', 15000, 1), 0.8, 1e-12, 'one year');
-  near(valueCurve('petrol', 15000, 3), 0.8 * 0.88 ** 2, 1e-12, 'three years');
-  near(yearlyValueLoss('petrol', 25000), 0.14, 1e-12, 'driving more loses more');
-  near(yearlyValueLoss('petrol', 500000), 0.30, 1e-12, 'capped');
+  near(yearlyValueLoss('petrol', 15000, 1), 0.15, 1e-12, 'second year');
+  near(yearlyValueLoss('petrol', 15000, 1 + 4), 0.06 + 0.09 * Math.exp(-1), 1e-12, 'five years');
+  assert.ok(yearlyValueLoss('petrol', 15000, 15) < 0.065, 'old cars lose about 6% a year');
+  near(yearlyValueLoss('petrol', 25000, 1), 0.17, 1e-12, 'driving more loses more');
+  near(yearlyValueLoss('petrol', 500000, 1), 0.30, 1e-12, 'capped');
+  // Close to Danish market values: TjekBil estimates a 2016 car at 81,000 now and 58,000 in 5 years.
+  const v = (a) => valueCurve('petrol', 12500, a);
+  near((81000 * v(15)) / v(10), 58000, 3000, 'ten-year-old car after five more years');
 });
 
 test('cash with no return: the cost is the plain loss in value', () => {
   const out = calculate({ ...noRunning, method: 'cash', price: 200000, downPayment: 1 }, { ...bare, years: 3 });
-  const residual = 200000 * 0.8 * 0.88 ** 2;
+  const residual = 200000 * valueCurve('petrol', 15000, 3);
   near(out.residual, residual, 1e-6, 'residual');
   near(out.perMonth, (200000 - residual) / 36, 1e-6, 'per month');
   near(out.parts.capital, 0, 1e-6, 'no money tied up at 0%');
@@ -43,7 +48,8 @@ test('money tied up: return lost on the price, compounding, net of the sale', ()
 
 test('a car bought used continues down the curve', () => {
   const out = calculate({ ...noRunning, method: 'cash', price: 100000, age: 5 }, { ...bare, years: 2 });
-  near(out.residual, 100000 * 0.88 ** 2, 1e-6, 'two more years at the yearly rate');
+  near(out.residual, (100000 * valueCurve('petrol', 15000, 7)) / valueCurve('petrol', 15000, 5), 1e-6, 'continues from age 5');
+  assert.ok(out.residual > 100000 * 0.8, 'an older car loses less than a new one');
 });
 
 test('manual loss in value uses the typed yearly rate', () => {
