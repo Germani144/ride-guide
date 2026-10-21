@@ -88,7 +88,7 @@ All prices are in today's money.
 | Money tied up in the car | equivalent monthly cost of (down payment + instalments + loan left at the end − sale value) at the return rate, minus loss in value and interest. Negative ("saved by paying later") when a cheap loan beats paying cash. |
 | Loan interest | interest paid within the span, spread per month. Instalments follow PMT(ÅOP ÷ 12, loan period, loan). |
 | Lease | monthly lease + one-time payment at each start + return fee at each end, discounted. |
-| Fuel / power | km per month ÷ km per unit × price, growing by the yearly price change. Prices are settings shared by every car: petrol 13.69 and diesel 13.29 kr per litre (from the spreadsheet), electricity 1.40 kr per kWh at home and 3.50 at public chargers (FDM 2026). Electric: 80% home + 20% public, and 10% extra use in the cold. |
+| Fuel / power | km per month ÷ km per unit × price, growing by the yearly price change. Prices are settings shared by every car: petrol 17.50 and diesel 19.50 kr per litre (October 2026), electricity 1.40 kr per kWh at home and 3.50 at public chargers (FDM 2026). Electric: 80% home + 20% public, and 10% extra use in the cold. |
 | Insurance | today's premium; on owned cars half of it follows the car's value down. |
 | Maintenance and repairs | (yearly base + per km × km a year) ÷ 12 × (1 + 8% × age), age up to 15. Petrol 3,000 kr + 0.25 kr/km, diesel 3,500 kr + 0.25 kr/km, electric 2,000 kr + 0.15 kr/km. Skipped when the lease includes service. |
 | Tyres | km × (four tyres 3,500 kr ÷ tyre life 30,000 km; electric 25,000 km), plus two swaps a year (400 kr each) with winter tyres. Skipped when the lease includes tyres. |

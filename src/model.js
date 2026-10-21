@@ -4,7 +4,7 @@ import { DEFAULT_SETTINGS } from './engine.js';
 // A saved car keeps every number it has ever been given, so switching payment method and back
 // loses nothing. toEngineInput() decides which numbers count for the chosen method.
 
-export const STATE_VERSION = 5;
+export const STATE_VERSION = 6;
 export const METHODS = ['cash', 'finance', 'lease'];
 export const FUELS = ['petrol', 'diesel', 'electric'];
 
@@ -158,6 +158,11 @@ export function migrate(raw, fallbackLang = 'en') {
   if ((raw.version ?? 1) < 3 && raw.settings?.buffer === 0.15) state.settings.buffer = DEFAULT_SETTINGS.buffer;
   // v4: years of ownership default 3 (was 5); km per year moved from each car to the settings.
   if ((raw.version ?? 1) < 4 && (raw.settings?.years == null || raw.settings.years === 5)) state.settings.years = DEFAULT_SETTINGS.years;
+  // v6: fuel prices updated to October 2026; prices still at the old defaults move with them.
+  if ((raw.version ?? 1) < 6) {
+    if (raw.settings?.petrolPrice === 13.69) state.settings.petrolPrice = DEFAULT_SETTINGS.petrolPrice;
+    if (raw.settings?.dieselPrice === 13.29) state.settings.dieselPrice = DEFAULT_SETTINGS.dieselPrice;
+  }
   state.cars = raw.cars.slice(0, 500).map(sanitizeCar);
   if (raw.version === STATE_VERSION && raw.draft && typeof raw.draft === 'object' && raw.draft.car) {
     state.draft = { ...raw.draft, car: sanitizeCar(raw.draft.car) };

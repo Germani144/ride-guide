@@ -14,8 +14,8 @@ export const DEFAULT_SETTINGS = {
   returnRate: 0.04,       // yearly return on money you don't spend on the car (compounding)
   buffer: 0.05,           // safety margin on owned cars
   energyGrowth: 0,        // yearly change in fuel and electricity prices
-  petrolPrice: 13.69,     // kr per litre (shared by every car; live prices are planned)
-  dieselPrice: 13.29,     // kr per litre
+  petrolPrice: 17.5,      // kr per litre, October 2026 (shared by every car; live prices are planned)
+  dieselPrice: 19.5,      // kr per litre, October 2026
   homeElPrice: 1.4,       // kr per kWh charging at home
   evPublicShare: 0.2,     // share of charging done at public chargers
   evPublicPrice: 3.5,     // kr per kWh at public (street and fast) chargers

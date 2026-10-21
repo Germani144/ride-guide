@@ -150,8 +150,14 @@ test('green tax is typed per half year and stored per month', () => {
 
 test('v4 data moves to v5: fuel and electricity prices are shared settings', () => {
   const s = migrate({ version: 4, settings: { years: 3 }, cars: [{ name: 'A', method: 'cash', price: 1, pricePerUnit: 99 }] });
-  assert.equal(s.version, 5);
+  assert.equal(s.version, STATE_VERSION);
   assert.equal(s.settings.petrolPrice, DEFAULT_SETTINGS.petrolPrice);
   assert.equal(s.settings.homeElPrice, DEFAULT_SETTINGS.homeElPrice);
   assert.equal(toEngineInput(s.cars[0]).pricePerUnit, undefined, "the car's own price is no longer used");
+});
+
+test('v5 data moves to v6: fuel prices at the old defaults take the new ones', () => {
+  const s = migrate({ version: 5, settings: { petrolPrice: 13.69, dieselPrice: 18 }, cars: [] });
+  assert.equal(s.settings.petrolPrice, DEFAULT_SETTINGS.petrolPrice);
+  assert.equal(s.settings.dieselPrice, 18, 'a price the user typed is kept');
 });
