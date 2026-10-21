@@ -46,7 +46,10 @@ prices (tyres, winter tyres, inspection, washing), fuel and electricity
 use for electric cars, yearly price change),
 and backup export and import. Settings save automatically as you
 change them; a "Saved" message confirms it. The app version is next to the name in the header, at the
-bottom of Settings and on the loading screen.
+bottom of Settings and on the loading screen. **Check for updates** (bottom of Settings) asks the
+server which version it serves right now: if it is newer, the app updates on the spot (it refreshes
+the service worker, deletes only its own `rideguide-` caches and reloads), so there is no need to
+close the app or reinstall. It also shows whether a push actually went live.
 
 Numbers can be typed the Danish or English way: `13,69`, `13.69`, `250.000` and `250 000`
 all work. The license plate is stored with the car; automatic lookup of green tax and fuel use
@@ -182,7 +185,9 @@ The pieces that would change for a commercial version are kept separate:
 
 GitHub Pages serves the repository root from `main`. Bump the version in `src/version.js`
 (and `package.json`) with every change that ships: it shows on the loading screen and in
-Settings, and names the offline cache, so phones pick up the new files.
+Settings, and names the offline cache, so phones pick up the new files. After pushing, fetch
+`https://germani144-ride.github.io/ride-guide/src/version.js` and check the new version is live;
+if GitHub Pages didn't publish it, another push re-triggers the build.
 
 The service worker loads files from the network first (so a change shows up on the next open)
 and falls back to its cached copy offline. It still only creates, reads and deletes caches named

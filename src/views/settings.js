@@ -2,6 +2,7 @@ import { LANGS } from '../i18n.js';
 import { parseNumber } from '../model.js';
 import { DEFAULT_SETTINGS } from '../engine.js';
 import { el, plain, assumptionBars, toast } from '../ui.js';
+import { fetchServedVersion, forceUpdate } from '../update.js';
 
 // Raw number for an input (no thousands separators, so it parses back the same way).
 const raw = (v, lang) => { const t = String(+Number(v).toFixed(4)); return lang === 'da' ? t.replace('.', ',') : t; };
@@ -97,5 +98,27 @@ export function renderSettings(ctx) {
       el('div', { class: 'actions stack' },
         el('button', { type: 'button', class: 'secondary', onclick: () => ctx.exportBackup() }, ts.export),
         el('label', { class: 'button secondary', for: 'import-file' }, ts.import, file))),
-    el('p', { class: 'version' }, `RideGuide ${ctx.version}`));
+    el('p', { class: 'version' }, `RideGuide ${ctx.version}`),
+    updateButton(ts));
+}
+
+function updateButton(ts) {
+  const current = String(globalThis.RIDEGUIDE_VERSION ?? '');
+  const btn = el('button', {
+    type: 'button', class: 'secondary small update-button',
+    onclick: async () => {
+      btn.textContent = ts.checking;
+      btn.disabled = true;
+      const latest = await fetchServedVersion();
+      btn.textContent = ts.checkUpdates;
+      btn.disabled = false;
+      if (!latest) { alert(ts.unreachable); return; }
+      if (latest === current) { alert(ts.upToDate.replace('{v}', current)); return; }
+      if (!confirm(ts.updateAvailable.replace('{latest}', latest).replace('{v}', current))) return;
+      btn.textContent = ts.updating;
+      btn.disabled = true;
+      await forceUpdate();
+    },
+  }, ts.checkUpdates);
+  return el('div', { class: 'update-row' }, btn);
 }

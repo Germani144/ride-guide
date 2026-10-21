@@ -166,3 +166,11 @@ test('settings the app no longer has (roadside assistance) are dropped', () => {
   const s = migrate({ version: 6, settings: { roadsideYear: 600 }, cars: [] });
   assert.equal('roadsideYear' in s.settings, false);
 });
+
+test('the update check reads the version from the served src/version.js', async () => {
+  const { versionFromSource } = await import('../src/update.js');
+  const js = readFileSync(new URL('../src/version.js', import.meta.url), 'utf8');
+  const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+  assert.equal(versionFromSource(js), pkg.version);
+  assert.equal(versionFromSource('<html>404</html>'), null);
+});
