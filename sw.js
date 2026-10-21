@@ -7,7 +7,7 @@
 // Strategy: network first, so a change shows up on the next open; the cached copy is the
 // fallback when offline or when the network is too slow. Bump CACHE when shipping changes.
 const PREFIX = 'rideguide-';
-const CACHE = `${PREFIX}v5`;
+const CACHE = `${PREFIX}v6`;
 const NETWORK_TIMEOUT_MS = 4000;
 const SHELL = [
   './', './index.html', './styles.css', './manifest.webmanifest',
@@ -16,7 +16,7 @@ const SHELL = [
   './fonts/barlow-latin-400-normal.woff2', './fonts/barlow-latin-500-normal.woff2',
   './fonts/barlow-latin-600-normal.woff2', './fonts/barlow-condensed-latin-600-normal.woff2',
   './fonts/barlow-condensed-latin-700-normal.woff2',
-  './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png',
+  './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png',
 ];
 
 const SCOPE = self.registration.scope; // e.g. https://germani144.github.io/ride-guide/
