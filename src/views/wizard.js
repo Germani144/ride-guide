@@ -2,12 +2,12 @@
 // starting with the most general question (do you have the plate?).
 import {
   newCar, METHODS, FUELS, DRIVING_FIELDS, ENERGY_DEFAULTS, costFields, runningFields,
-  formatPlate, parseNumber, validate, PERCENT_FIELDS,
+  formatPlate, parseNumber, validate, toShown, fromShown,
 } from '../model.js';
 import { fmt } from '../i18n.js';
 import {
   el, svg, ICONS, euStrip, evaluate, priceBlock, factsList, breakdownBar, toInputText,
-  plain, carTitle, spanPicker,
+  plain, carTitle, assumptionBars,
 } from '../ui.js';
 
 const FIRST = 'plate';
@@ -33,8 +33,7 @@ function path(d) {
 }
 
 export function startDraft(state, overrides = {}) {
-  const last = state.cars[0];
-  const car = newCar({ kmPerYear: last?.kmPerYear || 0 });
+  const car = newCar();
   return { car, hasPlate: null, step: FIRST, trail: [], jump: false, editingId: null, ...overrides };
 }
 
@@ -236,7 +235,7 @@ function numberField(field, car, t, lang, ctx, errorNodes, { label = field, deci
     'aria-describedby': `err-${field}${help ? ` help-${field}` : ''}`,
     oninput: (e) => {
       const v = parseNumber(e.target.value);
-      car[field] = v == null ? 0 : PERCENT_FIELDS.has(field) ? v / 100 : v;
+      car[field] = v == null ? 0 : fromShown(field, v);
       ctx.save();
     },
   });
@@ -300,7 +299,7 @@ function renderResult(ctx, d) {
       car.plate ? el('span', { class: 'plate plate-md' }, euStrip(), el('span', { class: 'plate-text' }, car.plate)) : null,
       el('p', { class: 'result-name' }, carTitle(car, t))),
     priceBlock(r, t, lang),
-    spanPicker(ctx),
+    assumptionBars(ctx),
     factsList(r, car, t, lang, state.settings),
     el('h3', {}, t.result.breakdown), bar, legend,
     answers(car, t, lang, change),
@@ -316,7 +315,7 @@ function renderResult(ctx, d) {
 export function answers(car, t, lang, onChange) {
   const val = (f) => {
     const unit = t.fields[labelKey(f, car)][1];
-    const n = PERCENT_FIELDS.has(f) ? car[f] * 100 : car[f];
+    const n = toShown(f, car[f]);
     return `${plain(n, lang)}${unit ? ` ${unit}` : ''}`;
   };
   const row = (f) => el('div', {}, el('dt', {}, t.fields[labelKey(f, car)][0]), el('dd', {}, val(f)));

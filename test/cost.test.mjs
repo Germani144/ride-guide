@@ -133,8 +133,15 @@ test('the safety margin applies to owned cars only', () => {
 
 test('defaults land near FDM\'s 2026 car budget (300,000 kr, 20,000 km a year, 5 years)', () => {
   const car = { ...base, kmPerYear: 20000, kmPerUnit: 16, pricePerUnit: 13.7, insuranceMo: 700, greenTaxMo: 200, method: 'cash', price: 300000 };
-  const petrol = calculate(car, DEFAULT_SETTINGS);
+  const fdm = { ...DEFAULT_SETTINGS, years: 5 };
+  const petrol = calculate(car, fdm);
   near(petrol.perKm, 4.32, 0.35, 'petrol kr per km (FDM 4.32)');
-  const ev = calculate({ ...car, fuel: 'electric', kmPerUnit: 6.5, pricePerUnit: 1.4 }, DEFAULT_SETTINGS);
+  const ev = calculate({ ...car, fuel: 'electric', kmPerUnit: 6.5, pricePerUnit: 1.4 }, fdm);
   near(ev.perKm, 3.86, 0.35, 'electric kr per km (FDM 3.86)');
+});
+
+test('km per year falls back to the shared setting', () => {
+  const car = { ...base, kmPerYear: undefined, method: 'cash', price: 0 };
+  const out = calculate(car, { ...bare, kmPerYear: 12000 });
+  near(out.kmMo, 1000, 1e-9, 'km per month');
 });

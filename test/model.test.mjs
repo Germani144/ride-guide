@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { calculate, DEFAULT_SETTINGS, PART_KEYS } from '../src/engine.js';
 import {
   sanitizeCar, toEngineInput, migrate, formatPlate, parseNumber, validate, newCar, inferMethod,
-  costFields, runningFields, STATE_VERSION,
+  costFields, runningFields, STATE_VERSION, toShown, fromShown,
 } from '../src/model.js';
 import { SEED_CARS } from '../src/seed.js';
 
@@ -96,7 +96,7 @@ test('validation follows the payment method', () => {
 test('v2 data moves to v3: new switches on, the old 15% buffer becomes the new default', () => {
   const v2 = { version: 2, lang: 'en', settings: { buffer: 0.15 }, cars: [{ name: 'Old', method: 'cash', price: 100000, depreciationFactor: 0.03 }] };
   const s = migrate(v2);
-  assert.equal(s.version, 3);
+  assert.equal(s.version, STATE_VERSION);
   assert.equal(s.settings.buffer, DEFAULT_SETTINGS.buffer);
   assert.equal(s.settings.years, DEFAULT_SETTINGS.years);
   const car = s.cars[0];
@@ -128,4 +128,22 @@ test('breakdown parts add up to the monthly cost', () => {
     const sum = PART_KEYS.reduce((a, k) => a + out.parts[k], 0);
     assert.ok(Math.abs(sum - out.perMonth) < 1e-6, `${seed.name}: ${sum} vs ${out.perMonth}`);
   }
+});
+
+test('v3 data moves to v4: 3 years by default, km per year shared by all cars', () => {
+  const v3 = { version: 3, settings: { years: 5, buffer: 0.05 }, cars: [{ name: 'A', method: 'cash', price: 1, kmPerYear: 8000 }] };
+  const s = migrate(v3);
+  assert.equal(s.version, 4);
+  assert.equal(s.settings.years, 3);
+  assert.equal(s.settings.kmPerYear, 10000);
+  assert.equal(migrate({ ...v3, settings: { years: 6 } }).settings.years, 6, 'a chosen span is kept');
+  // The car's own km no longer count: the shared value does.
+  assert.equal(toEngineInput(s.cars[0], { kmPerYear: s.settings.kmPerYear }).kmPerYear, 10000);
+});
+
+test('green tax is typed per half year and stored per month', () => {
+  assert.equal(fromShown('greenTaxMo', 1200), 200);
+  assert.equal(toShown('greenTaxMo', 200), 1200);
+  assert.equal(toShown('apr', 0.05), 5);
+  assert.equal(toShown('price', 1000), 1000);
 });

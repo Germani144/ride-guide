@@ -21,20 +21,26 @@ The app has three tabs:
      - finance: price, down payment (below 100%), ÅOP, loan period; loss in value as above
      - lease: monthly lease, one-time payment, return fee, lease period, and switches for
        "service included" (default on) and "tyres included" (default off)
-  5. Driving: km per year, fuel or energy use, fuel price or home electricity price.
-  6. Running costs per month: insurance, green tax, parking; maintenance is estimated
+  5. Fuel: fuel or energy use, fuel price or home electricity price.
+  6. Running costs: insurance and parking per month, green tax per half year (as on the bill;
+     the app divides it by 6); maintenance is estimated
      (switch it off to type your own; not asked when the lease includes service).
-  7. The result: kr per km, cost per month, where the money goes, over the shared time span
-     (pick 3 to 10 years right there). Save it as **my car** or just to **history**. Any answer
+  7. The result: kr per km, cost per month, where the money goes, for the shared years of
+     ownership and km per year (two bars right there). Save it as **my car** or just to **history**. Any answer
      can be changed from the result screen.
 - **Garage** shows the cars you marked as yours.
 - **History** shows every car you have added. Tap **Compare** to put 2 or 3 side by side.
 
+Years of ownership (default 3) and km per year (default 10,000) are the same for every car, so
+cars are always compared on equal terms. Two bars at the top of Garage, History, the comparison,
+a car's page and the result change them for all cars at once (also in Settings). A car only stores
+its own fuel use; a lease keeps its own lease period.
+
 On a car's page you can mark it as yours, edit it, **try another way to pay** (same car,
 new payment method, so lease vs. finance is two taps away), compare it, or delete it.
 
-Settings (top right) holds the language (English or Danish), the time span every car is compared
-over, the return on your money (4% a year), the safety margin on owned cars (5%), the running-cost
+Settings (top right) holds the language (English or Danish), the years of ownership and km per
+year, the return on your money (4% a year), the safety margin on owned cars (5%), the running-cost
 prices (tyres, winter tyres, inspection, roadside assistance, washing), fuel and electricity
 (yearly price change, public charging share and price, extra winter use for electric cars),
 backup export and import, and a reset to the spreadsheet cars. Settings save automatically as you
@@ -47,7 +53,8 @@ from the plate is not connected yet.
 
 Data is stored in the browser on the device only. Older data (v0.1 and v2) is upgraded
 automatically: cars switch to the estimated loss in value and maintenance (their typed values are
-kept for the manual mode), and the old 15% buffer becomes the new 5% default.
+kept for the manual mode), the old 15% buffer becomes the new 5% default, and the old 5-year
+default span becomes 3 years. Km per year saved on each car is kept but no longer used.
 
 ## Run locally
 
@@ -62,8 +69,9 @@ Opening `index.html` straight from disk does not work, because ES modules need a
 
 ## How the numbers are calculated
 
-`src/engine.js` simulates each car month by month over one **shared time span** (Settings,
-default 5 years), so every car is compared over the same period. Owned cars are sold at the end
+`src/engine.js` simulates each car month by month over one **shared time span** (years of
+ownership, default 3) at one **shared km per year** (default 10,000), so every car is compared
+on the same terms. Owned cars are sold at the end
 at their estimated value (any loan left is paid off from the sale). Leases renew on the same terms
 until the span is filled; a partial last lease counts pro rata.
 
@@ -84,7 +92,8 @@ All prices are in today's money.
 | Maintenance and repairs | (yearly base + per km × km a year) ÷ 12 × (1 + 8% × age), age up to 15. Petrol 3,000 kr + 0.25 kr/km, diesel 3,500 kr + 0.25 kr/km, electric 2,000 kr + 0.15 kr/km. Skipped when the lease includes service. |
 | Tyres | km × (four tyres 3,500 kr ÷ tyre life 30,000 km; electric 25,000 km), plus two swaps a year (400 kr each) with winter tyres. Skipped when the lease includes tyres. |
 | Inspection, roadside help, washing | inspection (500 kr) at age 4 and then every 2 years, unless the lease includes service; roadside assistance 600 kr a year for owned cars (leases include it); washing 100 kr a month. |
-| Green tax, parking | as typed, per month. |
+| Green tax | typed per half year, as on the bill, stored and counted per month (÷ 6). |
+| Parking | as typed, per month. |
 | Safety margin | owned cars only: 5% on top of everything else. |
 
 Results: **kr per km** = cost per month ÷ km per month. **Total** = cost per month × months.

@@ -1,7 +1,7 @@
 import { LANGS } from '../i18n.js';
 import { parseNumber } from '../model.js';
 import { DEFAULT_SETTINGS } from '../engine.js';
-import { el, plain, spanPicker, toast } from '../ui.js';
+import { el, plain, assumptionBars, toast } from '../ui.js';
 
 // Raw number for an input (no thousands separators, so it parses back the same way).
 const raw = (v, lang) => { const t = String(+Number(v).toFixed(4)); return lang === 'da' ? t.replace('.', ',') : t; };
@@ -86,7 +86,7 @@ export function renderSettings(ctx) {
     el('p', { class: 'hint' }, ts.autoSave),
     el('section', { class: 'setting' }, el('h2', {}, ts.language), langs),
     el('section', { class: 'setting' },
-      el('h2', {}, ts.groups.span[0]), el('p', { class: 'hint' }, ts.groups.span[1]), spanPicker(ctx)),
+      el('h2', {}, ts.groups.span[0]), el('p', { class: 'hint' }, ts.groups.span[1]), assumptionBars(ctx)),
     section('money'),
     section('running'),
     section('energy'),

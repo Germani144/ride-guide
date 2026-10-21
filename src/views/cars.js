@@ -2,7 +2,7 @@
 import { fmt } from '../i18n.js';
 import {
   el, svg, ICONS, plate, evaluate, priceBlock, factsList, breakdownBar, money, plain, carTitle, carSubline,
-  spanPicker,
+  assumptionBars,
 } from '../ui.js';
 import { answers } from './wizard.js';
 
@@ -50,6 +50,7 @@ export function renderGarage(ctx) {
   const cars = state.cars.filter((c) => c.mine);
   return el('div', { class: 'list-view' },
     el('header', { class: 'view-head' }, el('h1', {}, t.garage.title)),
+    cars.length ? assumptionBars(ctx) : null,
     cars.length
       ? el('ul', { class: 'rows' }, cars.map((c) => carRow(ctx, c)))
       : emptyState(t.garage.empty, t.garage.emptyAction, '#/history'));
@@ -79,6 +80,7 @@ export function renderHistory(ctx) {
 
   return el('div', { class: `list-view${selecting ? ' selecting' : ''}` },
     el('header', { class: 'view-head' }, el('h1', {}, t.history.title), state.cars.length > 1 ? toggle : null),
+    state.cars.length ? assumptionBars(ctx) : null,
     state.cars.length
       ? el('ul', { class: 'rows' }, state.cars.map((c) => carRow(ctx, c, { selectable: selecting })))
       : emptyState(t.history.empty, t.history.emptyAction, '#/new'),
@@ -125,6 +127,7 @@ export function renderCar(ctx, id) {
       el('p', { class: 'row-sub' }, carSubline(car, t, lang),
         car.mine ? el('span', { class: 'mine-tag' }, t.car.inGarage) : null)),
     priceBlock(r, t, lang),
+    assumptionBars(ctx),
     factsList(r, car, t, lang, state.settings),
     el('h3', {}, t.result.breakdown), bar, legend,
     el('h3', { class: 'answers-title' }, t.car.answers),
@@ -170,7 +173,7 @@ export function renderCompare(ctx, ids) {
   return el('div', { class: 'compare-view' },
     el('a', { class: 'back', href: '#/history' }, svg(ICONS.back), t.history.title),
     el('header', { class: 'view-head' }, el('h1', {}, t.compare.title)),
-    spanPicker(ctx),
+    assumptionBars(ctx),
     el('div', { class: `compare-grid n${cols.length}` }, cols),
     legend);
 }

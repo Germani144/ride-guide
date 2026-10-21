@@ -9,7 +9,8 @@
 
 // Settings the user can change (Settings page). Prices are Danish, in today's money (2026).
 export const DEFAULT_SETTINGS = {
-  years: 5,               // time span every car is compared over
+  years: 3,               // years of ownership: the time span every car is compared over
+  kmPerYear: 10000,       // km driven per year, the same for every car compared
   returnRate: 0.04,       // yearly return on money you don't spend on the car (compounding)
   buffer: 0.05,           // safety margin on owned cars
   energyGrowth: 0,        // yearly change in fuel and electricity prices
@@ -127,7 +128,7 @@ export function calculate(input, settings = {}) {
   const owned = !lease;
   const fuel = VALUE_CURVE[input.fuel] ? input.fuel : 'petrol';
   const electric = fuel === 'electric';
-  const kmYear = num(input.kmPerYear);
+  const kmYear = num(input.kmPerYear ?? s.kmPerYear);
   const kmMo = kmYear / 12;
   const age0 = Math.max(0, num(input.age));
   const price = owned ? num(input.price) : 0;

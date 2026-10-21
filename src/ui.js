@@ -1,7 +1,7 @@
 // Small DOM helpers and shared pieces of interface. User text only ever goes in via
 // textContent or input values, never as HTML.
 import { calculate, PART_KEYS } from './engine.js';
-import { toEngineInput, PERCENT_FIELDS } from './model.js';
+import { toEngineInput, toShown } from './model.js';
 import { fmt } from './i18n.js';
 
 export function el(tag, attrs = {}, ...children) {
@@ -48,7 +48,7 @@ export function plain(v, lang) {
 // Value shown inside an input: percentages as %, Danish decimal comma, empty for zero.
 export function toInputText(field, v, lang) {
   if (!v) return '';
-  const shown = PERCENT_FIELDS.has(field) ? +(v * 100).toFixed(4) : +Number(v).toFixed(4);
+  const shown = +Number(toShown(field, v)).toFixed(4);
   const s = String(shown);
   return lang === 'da' ? s.replace('.', ',') : s;
 }
@@ -57,7 +57,7 @@ export function toInputText(field, v, lang) {
 
 // Everything the views show about a car, under the user's settings.
 export function evaluate(car, settings) {
-  const out = calculate(toEngineInput(car), settings);
+  const out = calculate(toEngineInput(car, { kmPerYear: settings.kmPerYear }), settings);
   return { ...out, out };
 }
 
@@ -106,26 +106,40 @@ export function factsList(r, car, t, lang, settings) {
   const list = el('dl', { class: 'facts' },
     rows.map(([k, v]) => el('div', {}, el('dt', {}, k), el('dd', {}, v))));
   const note = el('p', { class: 'note' }, fmt(r.owned && settings.buffer > 0 ? t.result.noteOwned : t.result.note, {
-    years, rate: plain(settings.returnRate * 100, lang), pct: plain(settings.buffer * 100, lang),
+    years, km: money(settings.kmPerYear, lang),
+    rate: plain(settings.returnRate * 100, lang), pct: plain(settings.buffer * 100, lang),
   }));
   return [list, note];
 }
 
-// The shared time span every car is compared over. Changing it here changes the setting.
-export const SPAN_CHOICES = [3, 4, 5, 6, 8, 10];
-export function spanPicker(ctx) {
+// Years of ownership and km per year: shared by every car, chosen from bars on History,
+// Comparison, the result and Settings. Changing a bar changes the setting.
+export const SPAN_CHOICES = [1, 2, 3, 4, 5, 6, 8, 10];
+export const KM_CHOICES = [5000, 10000, 15000, 20000, 25000, 30000];
+
+function choiceBar(ctx, key, choices, label, show) {
   const { state, t } = ctx;
-  const years = state.settings.years;
+  const current = state.settings[key];
   return el('div', { class: 'field span-field' },
-    el('span', { class: 'label' }, t.compare.span),
-    el('div', { class: 'segmented', role: 'radiogroup', 'aria-label': t.compare.span },
-      SPAN_CHOICES.map((y) => el('button', {
-        type: 'button', role: 'radio', 'aria-checked': String(y === years),
+    el('span', { class: 'label' }, label),
+    el('div', { class: 'segmented', role: 'radiogroup', 'aria-label': label },
+      choices.map((v) => el('button', {
+        type: 'button', role: 'radio', 'aria-checked': String(v === current),
         onclick: () => {
-          state.settings.years = y; ctx.save(); ctx.render();
+          state.settings[key] = v; ctx.save(); ctx.render();
           if (ctx.route.startsWith('#/settings')) toast(t.settings.saved);
         },
-      }, String(y)))));
+      }, show(v)))));
+}
+
+export function spanPicker(ctx) {
+  return choiceBar(ctx, 'years', SPAN_CHOICES, ctx.t.compare.span, String);
+}
+export function kmPicker(ctx) {
+  return choiceBar(ctx, 'kmPerYear', KM_CHOICES, ctx.t.compare.km, (v) => String(v / 1000));
+}
+export function assumptionBars(ctx) {
+  return el('div', { class: 'assumptions' }, spanPicker(ctx), kmPicker(ctx));
 }
 
 // ---------- plate ----------

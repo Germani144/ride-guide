@@ -4,7 +4,7 @@ import { DEFAULT_SETTINGS } from './engine.js';
 // A saved car keeps every number it has ever been given, so switching payment method and back
 // loses nothing. toEngineInput() decides which numbers count for the chosen method.
 
-export const STATE_VERSION = 3;
+export const STATE_VERSION = 4;
 export const METHODS = ['cash', 'finance', 'lease'];
 export const FUELS = ['petrol', 'diesel', 'electric'];
 
@@ -26,7 +26,9 @@ export const COST_FIELDS = {
   finance: ['price', 'downPayment', 'apr', 'financeMonths'],
   lease: ['leaseMo', 'oneTimePayment', 'returnFee', 'yearsOfUse'],
 };
-export const DRIVING_FIELDS = ['kmPerYear', 'kmPerUnit', 'pricePerUnit'];
+// Km per year is shared by all cars (Settings and the bars on History and Comparison), like the
+// years of ownership, so a car only stores how much fuel it uses and what the fuel costs.
+export const DRIVING_FIELDS = ['kmPerUnit', 'pricePerUnit'];
 export const RUNNING_FIELDS = ['insuranceMo', 'greenTaxMo', 'maintenanceMo', 'parkingMo'];
 
 // The fields a step really asks for, given the car's switches.
@@ -45,6 +47,12 @@ export const SETTING_KEYS = Object.keys(DEFAULT_SETTINGS);
 
 // Stored as fractions, shown and typed as percentages.
 export const PERCENT_FIELDS = new Set(['downPayment', 'apr', 'depreciationFactor']);
+
+// Shown and typed value = stored value × scale. Percentages, and green tax, which Danish
+// owners know per half year (it is charged every 6 months) but is stored per month.
+export const SHOWN_SCALE = { downPayment: 100, apr: 100, depreciationFactor: 100, greenTaxMo: 6 };
+export const toShown = (field, v) => v * (SHOWN_SCALE[field] ?? 1);
+export const fromShown = (field, v) => v / (SHOWN_SCALE[field] ?? 1);
 
 export function makeId() {
   if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
@@ -98,7 +106,7 @@ export function sanitizeCar(raw) {
 // The numbers the engine sees. Fields that do not belong to the chosen method count as zero
 // (they stay saved, so switching back loses nothing). `year` is the current calendar year,
 // used for the car's age.
-export function toEngineInput(car, { year = new Date().getFullYear() } = {}) {
+export function toEngineInput(car, { year = new Date().getFullYear(), kmPerYear = DEFAULT_SETTINGS.kmPerYear } = {}) {
   const lease = car.method === 'lease';
   return {
     method: car.method, fuel: car.fuel,
@@ -115,7 +123,7 @@ export function toEngineInput(car, { year = new Date().getFullYear() } = {}) {
     leaseYears: lease ? car.yearsOfUse : 0,
     serviceIncluded: car.serviceIncluded !== false,
     tyresIncluded: car.tyresIncluded === true,
-    kmPerYear: car.kmPerYear, kmPerUnit: car.kmPerUnit, pricePerUnit: car.pricePerUnit,
+    kmPerYear, kmPerUnit: car.kmPerUnit, pricePerUnit: car.pricePerUnit,
     insuranceMo: car.insuranceMo, greenTaxMo: car.greenTaxMo,
     maintenanceAuto: car.maintenanceAuto !== false, maintenanceMo: car.maintenanceMo,
     parkingMo: car.parkingMo,
@@ -147,6 +155,8 @@ export function migrate(raw, fallbackLang = 'en') {
   // Before v3 the buffer covered costs the model did not know about (tyres, rising repairs).
   // Those are modelled now, so the old 15% default becomes the new, smaller default.
   if ((raw.version ?? 1) < 3 && raw.settings?.buffer === 0.15) state.settings.buffer = DEFAULT_SETTINGS.buffer;
+  // v4: years of ownership default 3 (was 5); km per year moved from each car to the settings.
+  if ((raw.version ?? 1) < 4 && (raw.settings?.years == null || raw.settings.years === 5)) state.settings.years = DEFAULT_SETTINGS.years;
   state.cars = raw.cars.slice(0, 500).map(sanitizeCar);
   if (raw.version === STATE_VERSION && raw.draft && typeof raw.draft === 'object' && raw.draft.car) {
     state.draft = { ...raw.draft, car: sanitizeCar(raw.draft.car) };
@@ -180,7 +190,7 @@ export function validate(car, fields) {
   for (const f of fields) {
     if (f === 'name' && !car.name.trim()) errors.name = 'required';
     if (f === 'plate' && !car.plate.trim()) errors.plate = 'required';
-    if (['price', 'leaseMo', 'kmPerYear', 'kmPerUnit', 'pricePerUnit'].includes(f)) positive(f);
+    if (['price', 'leaseMo', 'kmPerUnit', 'pricePerUnit'].includes(f)) positive(f);
     if (f === 'yearsOfUse' && car.method === 'lease') positive(f);
     if (f === 'apr' && car.method === 'finance') positive(f);
     if (f === 'financeMonths' && car.method === 'finance') positive(f);
