@@ -92,16 +92,10 @@ export function renderSettings(ctx) {
     section('running'),
     section('energy'),
     el('section', { class: 'setting' },
-      el('button', {
-        type: 'button', class: 'secondary',
-        onclick: () => { state.settings = { ...DEFAULT_SETTINGS }; ctx.save(); ctx.render(); toast(ts.resetDone); },
-      }, ts.resetDefaults)),
-    el('section', { class: 'setting' },
       el('h2', {}, ts.data),
       el('p', { class: 'hint' }, ts.dataHint),
       el('div', { class: 'actions stack' },
         el('button', { type: 'button', class: 'secondary', onclick: () => ctx.exportBackup() }, ts.export),
-        el('label', { class: 'button secondary', for: 'import-file' }, ts.import, file),
-        el('button', { type: 'button', class: 'danger', onclick: () => ctx.resetToSeed() }, ts.reset))),
+        el('label', { class: 'button secondary', for: 'import-file' }, ts.import, file))),
     el('p', { class: 'version' }, `RideGuide ${ctx.version}`));
 }

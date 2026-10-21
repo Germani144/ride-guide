@@ -147,18 +147,6 @@ async function importBackup(file) {
   render();
 }
 
-function resetToSeed() {
-  const s = t();
-  if (!confirm(s.settings.confirmReset)) return;
-  const lang = state.lang;
-  const settings = state.settings;
-  state = seedState(lang);
-  state.settings = settings;
-  save();
-  toast(s.toast.reset);
-  go('#/history');
-}
-
 // ---------- rendering ----------
 
 const TABS = [
@@ -193,7 +181,7 @@ function render({ animate = false, back = false } = {}) {
   }
   const ctx = {
     state, t: t(), ui, route, version: VERSION, save, go, render, saveDraft, updateCar, deleteCar, editCar,
-    tryOtherMethod, exportBackup, importBackup, resetToSeed,
+    tryOtherMethod, exportBackup, importBackup,
   };
   document.documentElement.lang = state.lang;
 

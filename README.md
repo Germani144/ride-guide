@@ -44,7 +44,7 @@ year, the return on your money (4% a year), the safety margin on owned cars (5%)
 prices (tyres, winter tyres, inspection, washing), fuel and electricity
 (petrol, diesel, electricity at home and at public chargers, public charging share, extra winter
 use for electric cars, yearly price change),
-backup export and import, and a reset to the spreadsheet cars. Settings save automatically as you
+and backup export and import. Settings save automatically as you
 change them; a "Saved" message confirms it. The app version is next to the name in the header, at the
 bottom of Settings and on the loading screen.
 
