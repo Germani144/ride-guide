@@ -1,7 +1,7 @@
 import { LANGS } from '../i18n.js';
 import { parseNumber } from '../model.js';
 import { DEFAULT_SETTINGS } from '../engine.js';
-import { el, plain, spanPicker } from '../ui.js';
+import { el, plain, spanPicker, toast } from '../ui.js';
 
 // Raw number for an input (no thousands separators, so it parses back the same way).
 const raw = (v, lang) => { const t = String(+Number(v).toFixed(4)); return lang === 'da' ? t.replace('.', ',') : t; };
@@ -42,7 +42,7 @@ export function renderSettings(ctx) {
         el('label', { class: 'switch', for: id },
           el('input', {
             id, type: 'checkbox', role: 'switch', checked: s[key],
-            onchange: (e) => { s[key] = e.target.checked; ctx.save(); },
+            onchange: (e) => { s[key] = e.target.checked; ctx.save(); toast(ts.saved); },
           }),
           el('span', { class: 'switch-text' }, label)),
         help ? el('p', { class: 'hint' }, help) : null);
@@ -59,6 +59,9 @@ export function renderSettings(ctx) {
             s[key] = v == null || v < 0 ? DEFAULT_SETTINGS[key] : fraction ? v / 100 : v;
             ctx.save();
           },
+          // Saved while typing; confirm when the field is left or Enter is pressed.
+          onchange: () => toast(ts.saved),
+          onkeydown: (e) => { if (e.key === 'Enter') e.target.blur(); },
         }),
         el('span', { class: 'unit' }, ts.units[unit])),
       el('p', { class: 'hint' }, help ? `${help} ` : '', `${ts.defaultIs} ${plain(def, lang)}${lang === 'en' && unit.startsWith('pct') ? '' : ' '}${ts.units[unit]}.`));
@@ -80,6 +83,7 @@ export function renderSettings(ctx) {
 
   return el('div', { class: 'settings-view' },
     el('header', { class: 'view-head' }, el('h1', {}, ts.title)),
+    el('p', { class: 'hint' }, ts.autoSave),
     el('section', { class: 'setting' }, el('h2', {}, ts.language), langs),
     el('section', { class: 'setting' },
       el('h2', {}, ts.groups.span[0]), el('p', { class: 'hint' }, ts.groups.span[1]), spanPicker(ctx)),
@@ -89,7 +93,7 @@ export function renderSettings(ctx) {
     el('section', { class: 'setting' },
       el('button', {
         type: 'button', class: 'secondary',
-        onclick: () => { state.settings = { ...DEFAULT_SETTINGS }; ctx.save(); ctx.render(); },
+        onclick: () => { state.settings = { ...DEFAULT_SETTINGS }; ctx.save(); ctx.render(); toast(ts.resetDone); },
       }, ts.resetDefaults)),
     el('section', { class: 'setting' },
       el('h2', {}, ts.data),

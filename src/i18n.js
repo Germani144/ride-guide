@@ -103,7 +103,7 @@ const en = {
   },
   compare: { title: 'Comparison', cheapest: 'Cheapest', more: '+{amount} kr per month', span: 'Compare over (years)' },
   settings: {
-    title: 'Settings', language: 'Language',
+    title: 'Settings', language: 'Language', autoSave: 'Changes are saved automatically.',
     groups: {
       span: ['Time span', 'Every car is compared over the same number of years. Owned cars are sold at the end; leases are renewed.'],
       money: ['Your money', null],
@@ -127,7 +127,7 @@ const en = {
       evWinterExtra: ['Extra energy use in the cold', 'Averaged over the year, on top of the energy use you type in.'],
     },
     units: { pct: '%', pctYear: '% a year', kr: 'kr', km: 'km', krYear: 'kr a year', krMonth: 'kr a month', krKwh: 'kr per kWh' },
-    defaultIs: 'Default:', resetDefaults: 'Reset these settings to the defaults',
+    defaultIs: 'Default:', saved: 'Saved', resetDone: 'Settings reset to the defaults', resetDefaults: 'Reset these settings to the defaults',
     data: 'Your data', dataHint: 'Cars are stored on this device only. Export a backup now and then.',
     export: 'Export backup', import: 'Import backup', reset: 'Reset to the spreadsheet cars',
     confirmReset: 'This replaces all your cars with the ones from the spreadsheet. Continue?',
@@ -245,7 +245,7 @@ const da = {
   },
   compare: { title: 'Sammenligning', cheapest: 'Billigst', more: '+{amount} kr. pr. måned', span: 'Sammenlign over (år)' },
   settings: {
-    title: 'Indstillinger', language: 'Sprog',
+    title: 'Indstillinger', language: 'Sprog', autoSave: 'Ændringer gemmes automatisk.',
     groups: {
       span: ['Periode', 'Alle biler sammenlignes over det samme antal år. Ejede biler sælges til sidst; leasing forlænges.'],
       money: ['Dine penge', null],
@@ -269,7 +269,7 @@ const da = {
       evWinterExtra: ['Ekstra forbrug i kulde', 'Gennemsnit over året, oven i det forbrug, du skriver.'],
     },
     units: { pct: '%', pctYear: '% om året', kr: 'kr.', km: 'km', krYear: 'kr. om året', krMonth: 'kr. om måneden', krKwh: 'kr. pr. kWh' },
-    defaultIs: 'Standard:', resetDefaults: 'Nulstil disse indstillinger',
+    defaultIs: 'Standard:', saved: 'Gemt', resetDone: 'Indstillingerne er nulstillet', resetDefaults: 'Nulstil disse indstillinger',
     data: 'Dine data', dataHint: 'Bilerne gemmes kun på denne enhed. Eksportér en sikkerhedskopi en gang imellem.',
     export: 'Eksportér sikkerhedskopi', import: 'Importér sikkerhedskopi', reset: 'Nulstil til regnearkets biler',
     confirmReset: 'Det erstatter alle dine biler med dem fra regnearket. Fortsæt?',

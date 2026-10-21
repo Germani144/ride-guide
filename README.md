@@ -37,8 +37,9 @@ Settings (top right) holds the language (English or Danish), the time span every
 over, the return on your money (4% a year), the safety margin on owned cars (5%), the running-cost
 prices (tyres, winter tyres, inspection, roadside assistance, washing), fuel and electricity
 (yearly price change, public charging share and price, extra winter use for electric cars),
-backup export and import, and a reset to the spreadsheet cars. The app version is at the bottom
-of Settings and on the loading screen.
+backup export and import, and a reset to the spreadsheet cars. Settings save automatically as you
+change them; a "Saved" message confirms it. The app version is at the bottom of Settings and on the
+loading screen.
 
 Numbers can be typed the Danish or English way: `13,69`, `13.69`, `250.000` and `250 000`
 all work. The license plate is stored with the car; automatic lookup of green tax and fuel use

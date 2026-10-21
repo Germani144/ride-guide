@@ -121,7 +121,10 @@ export function spanPicker(ctx) {
     el('div', { class: 'segmented', role: 'radiogroup', 'aria-label': t.compare.span },
       SPAN_CHOICES.map((y) => el('button', {
         type: 'button', role: 'radio', 'aria-checked': String(y === years),
-        onclick: () => { state.settings.years = y; ctx.save(); ctx.render(); },
+        onclick: () => {
+          state.settings.years = y; ctx.save(); ctx.render();
+          if (ctx.route.startsWith('#/settings')) toast(t.settings.saved);
+        },
       }, String(y)))));
 }
 

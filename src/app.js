@@ -34,7 +34,15 @@ function seedState(lang) {
 let saveTimer;
 function save() {
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => storage.save(state), 200);
+  saveTimer = setTimeout(flush, 200);
+}
+// Writes right away if a save is waiting. Called when the app is hidden or closed, so a change
+// made just before swiping the app away is not lost.
+function flush() {
+  if (saveTimer == null) return;
+  clearTimeout(saveTimer);
+  saveTimer = null;
+  storage.save(state);
 }
 
 function go(hash) {
@@ -212,6 +220,8 @@ async function start() {
   state = migrate(await storage.load(), browserLang) ?? seedState(browserLang);
   save(); // writes migrated data back in the current format
   window.addEventListener('hashchange', () => render());
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flush(); });
+  window.addEventListener('pagehide', flush);
   render();
   const splash = document.getElementById('splash');
   if (splash) {
