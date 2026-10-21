@@ -85,7 +85,7 @@ const en = {
   shares: {
     energy: 'Fuel / power', interest: 'Loan interest', depreciation: 'Loss in value', greenTax: 'Green tax',
     insurance: 'Insurance', maintenance: 'Maintenance and repairs', parking: 'Parking', lease: 'Lease',
-    capital: 'Money tied up in the car', tyres: 'Tyres', other: 'Inspection, roadside help, washing',
+    capital: 'Money tied up in the car', tyres: 'Tyres', other: 'Inspection and washing',
     buffer: 'Safety margin',
   },
   sharesNegative: { capital: 'Saved by paying later' },
@@ -119,7 +119,6 @@ const en = {
       winterTyres: ['I use winter tyres', 'Adds two tyre swaps a year. Both sets wear, so the tyre cost per km stays the same.'],
       tyreSwapPrice: ['Tyre swap', null],
       inspectionPrice: ['Periodic inspection (syn)', 'At 4 years, then every 2 years.'],
-      roadsideYear: ['Roadside assistance', 'For cars you own. Leases include it.'],
       washingMo: ['Washing', null],
       energyGrowth: ['Fuel and electricity price change', 'Yearly change. 0 keeps today\'s prices.'],
       evPublicShare: ['Charged at public chargers', 'The rest is charged at home.'],
@@ -230,7 +229,7 @@ const da = {
   shares: {
     energy: 'Brændstof / el', interest: 'Renter på lånet', depreciation: 'Værditab', greenTax: 'Grøn ejerafgift',
     insurance: 'Forsikring', maintenance: 'Vedligehold og reparationer', parking: 'Parkering', lease: 'Leasing',
-    capital: 'Penge bundet i bilen', tyres: 'Dæk', other: 'Syn, vejhjælp, vask',
+    capital: 'Penge bundet i bilen', tyres: 'Dæk', other: 'Syn og vask',
     buffer: 'Sikkerhedsmargin',
   },
   sharesNegative: { capital: 'Sparet ved at betale senere' },
@@ -264,7 +263,6 @@ const da = {
       winterTyres: ['Jeg kører med vinterdæk', 'Lægger to dækskift om året til. Begge sæt slides, så dækprisen pr. km er den samme.'],
       tyreSwapPrice: ['Dækskift', null],
       inspectionPrice: ['Periodisk syn', 'Efter 4 år og derefter hvert 2. år.'],
-      roadsideYear: ['Vejhjælp', 'For biler, du ejer. Leasing inkluderer det.'],
       washingMo: ['Vask', null],
       energyGrowth: ['Ændring i brændstof- og elpris', 'Ændring pr. år. 0 holder dagens priser.'],
       evPublicShare: ['Opladet på offentlige ladere', 'Resten lades derhjemme.'],

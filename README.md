@@ -41,7 +41,7 @@ new payment method, so lease vs. finance is two taps away), compare it, or delet
 
 Settings (top right) holds the language (English or Danish), the years of ownership and km per
 year, the return on your money (4% a year), the safety margin on owned cars (5%), the running-cost
-prices (tyres, winter tyres, inspection, roadside assistance, washing), fuel and electricity
+prices (tyres, winter tyres, inspection, washing), fuel and electricity
 (petrol, diesel, electricity at home and at public chargers, public charging share, extra winter
 use for electric cars, yearly price change),
 backup export and import, and a reset to the spreadsheet cars. Settings save automatically as you
@@ -92,7 +92,7 @@ All prices are in today's money.
 | Insurance | today's premium; on owned cars half of it follows the car's value down. |
 | Maintenance and repairs | (yearly base + per km × km a year) ÷ 12 × (1 + 8% × age), age up to 15. Petrol 3,000 kr + 0.25 kr/km, diesel 3,500 kr + 0.25 kr/km, electric 2,000 kr + 0.15 kr/km. Skipped when the lease includes service. |
 | Tyres | km × (four tyres 3,500 kr ÷ tyre life 30,000 km; electric 25,000 km), plus two swaps a year (400 kr each) with winter tyres. Skipped when the lease includes tyres. |
-| Inspection, roadside help, washing | inspection (500 kr) at age 4 and then every 2 years, unless the lease includes service; roadside assistance 600 kr a year for owned cars (leases include it); washing 100 kr a month. |
+| Inspection and washing | inspection (500 kr) at age 4 and then every 2 years, unless the lease includes service; washing 100 kr a month. Roadside assistance is not counted: it comes with the car insurance. |
 | Green tax | typed per half year, as on the bill, stored and counted per month (÷ 6). |
 | Parking | as typed, per month. |
 | Safety margin | owned cars only: 5% on top of everything else. |
@@ -108,9 +108,8 @@ FDM's 2026 car budget (petrol about 4.3 kr/km, electric about 3.6 kr/km; FDM: 4.
 
 Defaults come from: [FDM, cost of a car in 2026](https://fdm.dk/nyheder/nyt-om-trafik-og-biler/hvad-koster-det-at-holde-bil-i-2026-faa-svaret-her)
 (home/public charging split, totals), [FDM, inspection rules](https://fdm.dk/vaerd-at-vide/biltest-bilsyn/hvornaar-skal-min-bil-synes),
-and Danish price surveys for [tyres](https://www.skagenonline.dk/faq/hvad-koster-nye-daek-inkl-montering),
-[inspection](https://www.skagenonline.dk/faq/hvad-koster-et-bilsyn-hos-dekra) and
-[roadside assistance](https://www.skagenonline.dk/faq/hvad-koster-vejhjaelp-om-maneden).
+and Danish price surveys for [tyres](https://www.skagenonline.dk/faq/hvad-koster-nye-daek-inkl-montering) and
+[inspection](https://www.skagenonline.dk/faq/hvad-koster-et-bilsyn-hos-dekra).
 The value and maintenance curves are first estimates, to be replaced by data (the survival model
 for maintenance is planned).
 
@@ -133,7 +132,7 @@ saved, so switching back loses nothing).
 ## Tests
 
 - `test/cost.test.mjs` checks the cost engine: value curve, money tied up, finance, lease
-  renewal, maintenance, tyres, inspection, roadside, electricity, insurance, safety margin,
+  renewal, maintenance, tyres, inspection, electricity, insurance, safety margin,
   and that the defaults stay near FDM's 2026 budget.
 - `test/engine.test.mjs` checks sheet mode (`src/engine-sheet.js`) against the spreadsheet: the seven current columns
   in `data/sheet_fixtures.json` must match to within 0.01 kr, and three financed scenarios in

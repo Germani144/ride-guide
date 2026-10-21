@@ -9,7 +9,7 @@ const base = {
   insuranceMo: 0, greenTaxMo: 0, parkingMo: 0, depreciationAuto: true, maintenanceAuto: true,
 };
 // Only the money parts: no running costs, no margin, no return.
-const bare = { buffer: 0, returnRate: 0, tyreSetPrice: 0, inspectionPrice: 0, roadsideYear: 0, washingMo: 0 };
+const bare = { buffer: 0, returnRate: 0, tyreSetPrice: 0, inspectionPrice: 0, washingMo: 0 };
 const noRunning = { ...base, kmPerUnit: 0, maintenanceAuto: false, maintenanceMo: 0 };
 
 test('value curve: a bigger first-year loss, then a yearly loss that shrinks with age', () => {
@@ -109,12 +109,11 @@ test('tyres per km, plus swaps for winter tyres; included tyres cost nothing', (
   assert.equal(calculate({ ...car, method: 'lease', leaseMo: 1, leaseYears: 1, tyresIncluded: true }, s).parts.tyres, 0);
 });
 
-test('inspection at 4 years, then every 2; roadside only for owned cars', () => {
+test('inspection at 4 years, then every 2; skipped when the lease includes service', () => {
   const s = { ...bare, years: 4, inspectionPrice: 480 };
   const car = { ...noRunning, method: 'cash', price: 0, age: 3 };
   near(calculate(car, s).parts.other, (2 * 480) / 48, 1e-9, 'inspections at age 4 and 6');
-  near(calculate(car, { ...s, inspectionPrice: 0, roadsideYear: 600 }).parts.other, 50, 1e-9, 'roadside');
-  near(calculate({ ...car, method: 'lease', leaseMo: 1, leaseYears: 4 }, { ...s, inspectionPrice: 0, roadsideYear: 600 }).parts.other, 0, 1e-9, 'lease');
+  near(calculate({ ...car, method: 'lease', leaseMo: 1, leaseYears: 4 }, s).parts.other, 0, 1e-9, 'lease with service');
 });
 
 test('electric energy mixes home and public charging, with extra use in the cold', () => {

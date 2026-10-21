@@ -14,7 +14,7 @@ const GROUPS = {
   running: [
     ['tyreSetPrice', 'kr', false], ['tyreLifeKm', 'km', false], ['tyreLifeKmEv', 'km', false],
     ['winterTyres'], ['tyreSwapPrice', 'kr', false],
-    ['inspectionPrice', 'kr', false], ['roadsideYear', 'krYear', false], ['washingMo', 'krMonth', false],
+    ['inspectionPrice', 'kr', false], ['washingMo', 'krMonth', false],
   ],
   energy: [
     ['petrolPrice', 'krLitre', false], ['dieselPrice', 'krLitre', false],

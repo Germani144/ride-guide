@@ -161,3 +161,8 @@ test('v5 data moves to v6: fuel prices at the old defaults take the new ones', (
   assert.equal(s.settings.petrolPrice, DEFAULT_SETTINGS.petrolPrice);
   assert.equal(s.settings.dieselPrice, 18, 'a price the user typed is kept');
 });
+
+test('settings the app no longer has (roadside assistance) are dropped', () => {
+  const s = migrate({ version: 6, settings: { roadsideYear: 600 }, cars: [] });
+  assert.equal('roadsideYear' in s.settings, false);
+});

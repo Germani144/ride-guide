@@ -26,7 +26,6 @@ export const DEFAULT_SETTINGS = {
   winterTyres: false,     // a second set, swapped twice a year
   tyreSwapPrice: 400,
   inspectionPrice: 500,   // periodic inspection (syn): at 4 years, then every 2 years
-  roadsideYear: 600,      // roadside assistance for cars you own (included in leases)
   washingMo: 100,
 };
 
@@ -238,7 +237,6 @@ export function calculate(input, settings = {}) {
     if (!tyresByLease) {
       add('tyres', (kmMo * num(s.tyreSetPrice)) / (num(life) || 1) + (s.winterTyres ? (2 * num(s.tyreSwapPrice)) / 12 : 0), k);
     }
-    if (owned) add('other', num(s.roadsideYear) / 12, k);
     add('other', num(s.washingMo), k);
   }
 
