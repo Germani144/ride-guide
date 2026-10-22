@@ -26,6 +26,7 @@ RideGuide lives at https://germani144-ride.github.io/ride-guide/ (repo `germani1
 
 - **Service worker:** Cache names start with `rideguide-` (`CACHE` in `sw.js` is built from the version in `src/version.js`). On activate, delete only caches with that prefix (never "every cache but the current one"). Read from this app's own cache (`caches.open(C).then(c => c.match(...))`), never the global `caches.match()`. Only handle requests whose URL starts with `self.registration.scope`; leave other apps, the GitHub API and other origins alone.
 - **Updates:** fetch network-first with `{cache: 'no-cache'}`, store only `r.ok` responses, fall back to this app's own cache when offline. Register the worker with `{scope: './', updateViaCache: 'none'}`.
+- **Content-Security-Policy** (in `index.html`): only this app's own address. No inline `<script>` blocks or inline event handlers (put code in `src/`). A feature that must call another address adds exactly that address to `connect-src`; never loosen the rest.
 - **Storage:** all storage goes through the adapter in `src/storage.js`, whose key is `rideguide.v1` (always `rideguide.`-prefixed).
 - **Manifest:** `scope` and `start_url` are `./`. **Never change the manifest `id`**, not even to fix an install problem, unless Pedro explicitly asks for it in that chat. The id is how Android recognises the installed app: changing it orphans the installed copy. If installing fails on the phone, investigate and report; don't change the id.
 - The manifest `id` is `/ride-guide/app`.

@@ -12,7 +12,7 @@ const CACHE = `${PREFIX}v${self.RIDEGUIDE_VERSION}`; // a new version gets a fre
 const NETWORK_TIMEOUT_MS = 4000;
 const SHELL = [
   './', './index.html', './styles.css', './manifest.webmanifest',
-  './src/version.js', './src/update.js', './src/app.js', './src/engine.js', './src/model.js', './src/storage.js', './src/i18n.js',
+  './src/version.js', './src/boot.js', './src/update.js', './src/app.js', './src/engine.js', './src/model.js', './src/storage.js', './src/i18n.js',
   './src/seed.js', './src/ui.js', './src/views/wizard.js', './src/views/cars.js', './src/views/settings.js',
   './fonts/barlow-latin-400-normal.woff2', './fonts/barlow-latin-500-normal.woff2',
   './fonts/barlow-latin-600-normal.woff2', './fonts/barlow-condensed-latin-600-normal.woff2',

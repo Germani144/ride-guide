@@ -151,6 +151,7 @@ saved, so switching back loses nothing).
 ```
 index.html, styles.css        page shell and styling (light and dark)
 src/version.js                app version (loading screen, Settings, offline cache name)
+src/boot.js                   shows the version in the header and on the loading screen
 src/engine.js                 cost engine: pure functions, no DOM or storage
 src/engine-sheet.js           sheet mode: the spreadsheet's formulas, used by the tests only
 src/model.js                  car data model, payment methods, migration, validation
@@ -180,6 +181,15 @@ The pieces that would change for a commercial version are kept separate:
 - **The decision tree** is a small table of steps in `src/views/wizard.js`, so a plate lookup
   step that prefills the car can slot in after the plate question.
 - **Strings** are all in `src/i18n.js`, so more languages are one block each.
+
+## Security
+
+Everything stays on the phone: RideGuide sends no data anywhere. `index.html` sets a strict
+Content-Security-Policy: scripts, styles, fonts, images and network requests may only come from
+RideGuide's own address, so no injected or third-party script can run or send data out. Keep it
+that way: no inline `<script>` blocks or `onclick="…"` attributes (put code in `src/`), and if a
+feature ever needs another address (a plate lookup or price service), add exactly that address to
+`connect-src` in the policy.
 
 ## Deploy
 
