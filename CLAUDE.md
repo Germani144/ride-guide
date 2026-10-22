@@ -17,6 +17,9 @@
 - Changes to saved data shape go through `migrate()` in `src/model.js`, with a test.
 - Push to GitHub without asking once a change Pedro asked for is built and `npm test` passes
   (his standing instruction, 2026-10-21). Don't push work he hasn't asked for.
+- **Never commit personal data or secrets** to this public repo: no saved car data, exports,
+  personal spreadsheets (e.g. life_sheet.xlsx) or real figures from them, and no API keys or
+  tokens. A future data provider's key must not live in the repo; ask Pedro how it should be held.
 
 ## Address and shared-origin rules
 
