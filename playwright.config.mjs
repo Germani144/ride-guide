@@ -4,7 +4,7 @@
 // Set PW_CHROMIUM to use an already installed Chromium instead of Playwright's download.
 import { defineConfig, devices } from '@playwright/test';
 
-const PORT = 4173;
+const PORT = 4391; // an unusual port, so the tests never run against some other server
 
 export default defineConfig({
   testDir: 'test/browser',
@@ -19,6 +19,6 @@ export default defineConfig({
   webServer: {
     command: `node test/browser/serve.mjs ${PORT}`,
     url: `http://127.0.0.1:${PORT}/ride-guide/`,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
   },
 });

@@ -59,3 +59,12 @@ test('a car page shows the breakdown, can be marked as mine and deleted', async 
   await expect(page.locator('.toast')).toHaveText('Car deleted');
   await expect(page.locator('.rows li')).toHaveCount(6);
 });
+
+test('on a narrow phone the comparison columns get tighter', async ({ page, app }) => {
+  await page.setViewportSize({ width: 360, height: 780 });
+  await app.open('#/history');
+  const ids = (await app.state()).cars.slice(1, 4).map(c => c.id);
+  await app.open(`#/compare/${ids.join(',')}`);
+  await expect(page.locator('.compare-col').first()).toHaveCSS('padding', '8px');
+  await expect(page.locator('.compare-grid')).toHaveCSS('gap', '6px');
+});

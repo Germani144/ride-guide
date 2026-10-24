@@ -228,4 +228,11 @@ test('every file the app loads is in the offline cache list (SHELL in sw.js)', a
     if (f.startsWith('src/') || f.startsWith('css/'))
       assert.ok(appFiles.includes(f), `SHELL lists ${f}, which does not exist`);
   }
+  // Every stylesheet is linked from index.html, in the same order as in SHELL.
+  const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  const linked = [...html.matchAll(/rel="stylesheet" href="([^"]+)"/g)].map(m => m[1]);
+  assert.deepEqual(
+    linked,
+    [...shell].filter(f => f.startsWith('css/')),
+  );
 });

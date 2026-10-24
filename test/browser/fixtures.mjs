@@ -26,9 +26,9 @@ export const test = base.extend({
       },
       // The saved state, as the app stores it.
       state: () => page.evaluate(() => JSON.parse(localStorage.getItem('rideguide.v1'))),
-      // Waits for the app's debounced save to reach storage.
+      // Writes a pending save to storage now (the app does this when it is hidden or closed).
       async saved() {
-        await page.waitForTimeout(400);
+        await page.evaluate(() => window.dispatchEvent(new Event('pagehide')));
       },
     });
   },

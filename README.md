@@ -150,8 +150,8 @@ src/version.js, src/boot.js   app version; shows it in the header and on the loa
 src/app.js                    the shell: app state, saving, routing, the actions screens call
 src/routes.js                 addresses (#/new, #/garage, #/history, #/car/:id, #/compare/:ids,
                               #/settings) and which tab is active
-src/views/                    screens, one file each: wizard, result, fields, cars (Garage,
-                              History, car page, comparison), settings, tabs
+src/views/                    the screens: wizard, result, cars (Garage, History, car page,
+                              comparison), settings; and their parts: fields, tabs
 src/wizard-flow.js            the New car wizard's steps: order, fields, switches
 src/ui.js                     shared interface pieces (el(), price, breakdown, bars, plate, toast)
 src/format.js                 numbers in English or Danish

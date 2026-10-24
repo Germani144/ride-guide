@@ -1,8 +1,8 @@
 // Offline support.
 //
-// Several apps live on the same origin (germani144.github.io/<app>/) and share one CacheStorage.
-// So this worker only ever creates, reads and deletes caches whose name starts with PREFIX,
-// and only handles requests inside its own folder.
+// RideGuide has its own address now, but several apps once shared one origin (and so one
+// CacheStorage). So this worker still only creates, reads and deletes caches whose name starts
+// with PREFIX, and only handles requests inside its own folder.
 //
 // Strategy: network first, so a change shows up on the next open; the cached copy is the
 // fallback when offline or when the network is too slow. Bump the version in src/version.js when shipping changes.

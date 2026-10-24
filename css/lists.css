@@ -257,3 +257,13 @@
 .compare-view .legend-name {
   flex: none;
 }
+
+/* Narrow phones: tighter comparison columns. Must come after the .compare-col rules above. */
+@media (max-width: 380px) {
+  .compare-grid.n3 {
+    gap: 6px;
+  }
+  .compare-col {
+    padding: 8px;
+  }
+}

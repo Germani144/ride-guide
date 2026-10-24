@@ -8,9 +8,10 @@ export const STATE_VERSION = 6;
 export const METHODS = ['cash', 'finance', 'lease'];
 export const FUELS = ['petrol', 'diesel', 'electric'];
 
-// A car's own fuel price, from before prices became shared settings (v0.6). Still stored with
-// each car so old data keeps its shape, and used to guess the fuel of very old data; the cost
-// engine uses the prices in Settings instead.
+// Starting value for a new car's own fuel price (`pricePerUnit`), a field from before prices
+// became shared settings (v0.6). It is still stored so saved data keeps its shape, but the cost
+// engine uses the prices in Settings. (inferFuel() reads a stored price to guess the fuel of
+// very old data.)
 export const ENERGY_DEFAULTS = { petrol: 13.69, diesel: 13.29, electric: 2.5 };
 
 export const NUMBER_FIELDS = [

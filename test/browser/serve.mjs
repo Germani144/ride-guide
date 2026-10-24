@@ -23,7 +23,13 @@ const TYPES = {
 };
 
 createServer(async (req, res) => {
-  const path = decodeURIComponent(new URL(req.url, 'http://x').pathname);
+  let path;
+  try {
+    path = decodeURIComponent(new URL(req.url, 'http://x').pathname);
+  } catch {
+    res.writeHead(400).end('bad request');
+    return;
+  }
   if (!path.startsWith(BASE)) {
     res.writeHead(302, { Location: BASE }).end();
     return;

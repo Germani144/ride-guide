@@ -190,15 +190,6 @@
   }
 }
 
-@media (max-width: 380px) {
-  .compare-grid.n3 {
-    gap: 6px;
-  }
-  .compare-col {
-    padding: 8px;
-  }
-}
-
 .brand-version {
   font-family: var(--sans);
   font-weight: 500;

@@ -33,7 +33,7 @@
 ```
 index.html, css/*.css      page shell; one stylesheet per area (order set in index.html)
 src/app.js                 state, saving, routing, actions      src/routes.js   addresses, tabs
-src/views/*.js             screens (wizard, result, fields, cars, settings, tabs)
+src/views/*.js             screens and their parts (wizard, result, fields, cars, settings, tabs)
 src/wizard-flow.js         wizard steps   src/format.js numbers   src/compare.js comparison
 src/engine.js              cost engine    src/engine-sheet.js sheet mode (tests only)
 src/model.js               car record, settings, migrate(), validation
