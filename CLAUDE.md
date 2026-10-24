@@ -27,6 +27,8 @@
 - **Never commit personal data or secrets** to this public repo: no saved car data, exports,
   personal spreadsheets (e.g. life_sheet.xlsx) or real figures from them, and no API keys or
   tokens. A future data provider's key must not live in the repo; ask Pedro how it should be held.
+  Exception, Pedro's decision (2026-10-24): the spreadsheet cars in `src/seed.js` and the
+  spreadsheet values in `data/` stay as they are; don't replace or scrub them.
 
 ## Layout and commands
 
