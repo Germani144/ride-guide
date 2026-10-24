@@ -1,0 +1,59 @@
+import { test, expect } from './fixtures.mjs';
+
+// The spreadsheet cars the app starts with, at 3 years and 10,000 km a year.
+const HISTORY = [
+  ['Fiesta GM', '5.38 kr per km', '4,480 kr per month'],
+  ['MondeoI', '4.53 kr per km', '3,774 kr per month'],
+  ['MondeoD', '4.15 kr per km', '3,459 kr per month'],
+  ['MondeoIII', '4.37 kr per km', '3,641 kr per month'],
+  ['CeedGM', '6.28 kr per km', '5,236 kr per month'],
+  ['Y GM', '5.94 kr per km', '4,954 kr per month'],
+  ['Scenic GM', '5.72 kr per km', '4,765 kr per month'],
+];
+const AT_20000_KM = ['3.14', '3.36', '3.02', '3.21', '3.69', '3.11', '3.00'].map((v) => `${v} kr per km`);
+
+test('history lists every car with its cost', async ({ page, app }) => {
+  await app.open('#/history');
+  const rows = await page.locator('.rows li').evaluateAll((items) =>
+    items.map((li) => ['.row-name', '.row-km', '.row-month'].map((s) => li.querySelector(s).textContent)),
+  );
+  expect(rows).toEqual(HISTORY);
+});
+
+test('the km and years bars change every car', async ({ page, app }) => {
+  await app.open('#/history');
+  await page.locator('.span-field').nth(1).getByRole('radio', { name: '20' }).click();
+  await expect(page.locator('.rows li .row-km')).toHaveText(AT_20000_KM);
+  await page.locator('.span-field').nth(0).getByRole('radio', { name: '5' }).click();
+  await app.saved();
+  expect((await app.state()).settings).toMatchObject({ kmPerYear: 20000, years: 5 });
+});
+
+test('compare two cars', async ({ page, app }) => {
+  await app.open('#/history');
+  await page.getByRole('button', { name: 'Compare' }).click();
+  await page.locator('.rows li', { hasText: 'MondeoD' }).locator('label').click();
+  await page.locator('.rows li', { hasText: 'MondeoIII' }).locator('label').click();
+  await page.getByRole('button', { name: 'Compare 2 cars' }).click();
+  await expect(page.getByRole('heading', { name: 'Comparison' })).toBeVisible();
+  const cols = page.locator('.compare-col');
+  await expect(cols).toHaveCount(2);
+  await expect(cols.nth(0)).toContainText('Cheapest');
+  await expect(cols.nth(0).locator('.price-num')).toHaveText('4.15');
+  await expect(cols.nth(1).locator('.price-num')).toHaveText('4.37');
+  await expect(cols.nth(1).locator('.diff')).toHaveText('+182 kr per month');
+});
+
+test('a car page shows the breakdown, can be marked as mine and deleted', async ({ page, app }) => {
+  await app.open('#/history');
+  await page.locator('.row', { hasText: 'MondeoD' }).click();
+  await expect(page.getByRole('heading', { name: 'MondeoD' })).toBeVisible();
+  await expect(page.locator('.price-num')).toHaveText('4.15');
+  await expect(page.locator('.legend li').first()).toContainText('Maintenance and repairs1,100 kr');
+  await page.getByRole('button', { name: 'This is my car' }).click();
+  await expect(page.locator('.toast')).toHaveText('Added to your garage');
+  page.once('dialog', (d) => d.accept());
+  await page.getByRole('button', { name: 'Delete car' }).click();
+  await expect(page.locator('.toast')).toHaveText('Car deleted');
+  await expect(page.locator('.rows li')).toHaveCount(6);
+});

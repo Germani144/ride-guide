@@ -6,6 +6,11 @@
   "description": "Compare what cars really cost: lease, buy or finance.",
   "scripts": {
     "start": "python3 -m http.server 8000",
-    "test": "node --test test/engine.test.mjs test/cost.test.mjs test/model.test.mjs"
+    "test": "node --test test/engine.test.mjs test/cost.test.mjs test/model.test.mjs",
+    "test:browser": "playwright test",
+    "test:all": "npm test && npm run test:browser"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1"
   }
 }
