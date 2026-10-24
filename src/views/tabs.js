@@ -1,5 +1,6 @@
 // The bottom tab bar (New car, Garage, History) and the settings link in the top bar.
 import { el, svg, ICONS } from '../ui.js';
+import { activeTab } from '../routes.js';
 
 const TABS = [
   ['#/new', 'new', ICONS.plus],
@@ -7,24 +8,20 @@ const TABS = [
   ['#/history', 'history', ICONS.history],
 ];
 
-// `carIsMine` says whether the car on a #/car/ route is in the garage (it decides which tab lights up).
+// `carIsMine`: whether the car on a #/car/ page is in the garage (its page then belongs to Garage).
 export function renderTabs(route, t, carIsMine) {
   const tabs = document.getElementById('tabs');
   const settingsLink = document.getElementById('settings-link');
+  const active = activeTab(route, carIsMine);
   tabs.replaceChildren(
-    ...TABS.map(([href, key, icon]) => {
-      const active =
-        route.startsWith(href) ||
-        (key === 'history' &&
-          (route.startsWith('#/compare') || (route.startsWith('#/car/') && !carIsMine))) ||
-        (key === 'garage' && route.startsWith('#/car/') && carIsMine);
-      return el(
+    ...TABS.map(([href, key, icon]) =>
+      el(
         'a',
-        { href, class: 'tab', 'aria-current': active ? 'page' : null },
+        { href, class: 'tab', 'aria-current': key === active ? 'page' : null },
         svg(icon),
         el('span', {}, t.nav[key]),
-      );
-    }),
+      ),
+    ),
   );
   settingsLink.setAttribute('aria-label', t.nav.settings);
   settingsLink.setAttribute('aria-current', route.startsWith('#/settings') ? 'page' : 'false');

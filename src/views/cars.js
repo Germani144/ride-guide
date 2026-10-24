@@ -9,12 +9,12 @@ import {
   priceBlock,
   factsList,
   breakdownBar,
-  money,
-  plain,
   carTitle,
   carSubline,
   assumptionBars,
 } from '../ui.js';
+import { money, plain } from '../format.js';
+import { compareResults } from '../compare.js';
 import { answers } from './result.js';
 
 export const MAX_COMPARE = 3;
@@ -255,15 +255,13 @@ export function renderCompare(ctx, ids) {
     .filter(Boolean)
     .slice(0, MAX_COMPARE);
   const results = cars.map(c => evaluate(c, state.settings));
-  const priced = results.filter(r => r.perKm > 0);
-  const bestKm = priced.length ? Math.min(...priced.map(r => r.perKm)) : null;
-  const bestMonth = results.length ? Math.min(...results.map(r => r.perMonth)) : 0;
+  const { cheapest, extraPerMonth, mergedParts } = compareResults(results);
 
   const cols = cars.map((car, i) => {
     const r = results[i];
-    const best = bestKm != null && r.perKm === bestKm;
+    const best = cheapest[i];
     const { bar } = breakdownBar(r.parts, t, lang);
-    const diff = r.perMonth - bestMonth;
+    const diff = extraPerMonth[i];
     return el(
       'section',
       { class: `compare-col${best ? ' best' : ''}` },
@@ -295,9 +293,7 @@ export function renderCompare(ctx, ids) {
   });
 
   // One legend for all columns, built from the parts any of the cars has.
-  const merged = {};
-  for (const r of results) for (const [k, v] of Object.entries(r.parts)) merged[k] = (merged[k] || 0) + v;
-  const { legend } = breakdownBar(merged, t, lang);
+  const { legend } = breakdownBar(mergedParts, t, lang);
   for (const v of legend.querySelectorAll('.legend-val')) v.remove();
 
   return el(

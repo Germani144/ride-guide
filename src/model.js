@@ -8,7 +8,9 @@ export const STATE_VERSION = 6;
 export const METHODS = ['cash', 'finance', 'lease'];
 export const FUELS = ['petrol', 'diesel', 'electric'];
 
-// Energy prices from the spreadsheet, used as starting values for a new car.
+// A car's own fuel price, from before prices became shared settings (v0.6). Still stored with
+// each car so old data keeps its shape, and used to guess the fuel of very old data; the cost
+// engine uses the prices in Settings instead.
 export const ENERGY_DEFAULTS = { petrol: 13.69, diesel: 13.29, electric: 2.5 };
 
 export const NUMBER_FIELDS = [
@@ -31,7 +33,20 @@ export const NUMBER_FIELDS = [
   'parkingMo',
 ];
 
-export const BOOL_FIELDS = ['depreciationAuto', 'maintenanceAuto', 'serviceIncluded', 'tyresIncluded'];
+// On/off switches on a car, with their defaults: estimate the loss in value and maintenance;
+// a lease includes service but not tyres.
+export const SWITCH_DEFAULTS = {
+  depreciationAuto: true,
+  maintenanceAuto: true,
+  serviceIncluded: true,
+  tyresIncluded: false,
+};
+export const BOOL_FIELDS = Object.keys(SWITCH_DEFAULTS);
+
+// Whether a car's switch is on (its default if the car has no value for it).
+export function switchOn(car, key) {
+  return typeof car?.[key] === 'boolean' ? car[key] : SWITCH_DEFAULTS[key];
+}
 
 // Fields asked for on the payment step, per method. How long you keep an owned car is the
 // shared time span in Settings, so it is no longer asked per car; a lease asks its period.
@@ -40,31 +55,27 @@ export const COST_FIELDS = {
   finance: ['price', 'downPayment', 'apr', 'financeMonths'],
   lease: ['leaseMo', 'oneTimePayment', 'returnFee', 'yearsOfUse'],
 };
-// Km per year is shared by all cars (Settings and the bars on History and Comparison), like the
-// years of ownership, so a car only stores how much fuel it uses and what the fuel costs.
-// Fuel and electricity prices are shared too (Settings), so a car only stores its consumption.
+// Km per year, years of ownership and fuel and electricity prices are shared by all cars
+// (Settings, and the bars on History and Comparison), so a car only stores its consumption.
 export const DRIVING_FIELDS = ['kmPerUnit'];
 export const RUNNING_FIELDS = ['insuranceMo', 'greenTaxMo', 'maintenanceMo', 'parkingMo'];
 
 // The fields a step really asks for, given the car's switches.
 export function costFields(car) {
   const f = [...COST_FIELDS[car.method]];
-  if (car.method !== 'lease' && car.depreciationAuto === false) f.push('depreciationFactor');
+  if (car.method !== 'lease' && !switchOn(car, 'depreciationAuto')) f.push('depreciationFactor');
   return f;
 }
 export function runningFields(car) {
   return RUNNING_FIELDS.filter(
     f =>
       f !== 'maintenanceMo' ||
-      (car.maintenanceAuto === false && !(car.method === 'lease' && car.serviceIncluded !== false)),
+      (!switchOn(car, 'maintenanceAuto') && !(car.method === 'lease' && switchOn(car, 'serviceIncluded'))),
   );
 }
 
 // Settings the user can change, with their defaults (see engine.js).
 export const SETTING_KEYS = Object.keys(DEFAULT_SETTINGS);
-
-// Stored as fractions, shown and typed as percentages.
-export const PERCENT_FIELDS = new Set(['downPayment', 'apr', 'depreciationFactor']);
 
 // Shown and typed value = stored value × scale. Percentages, and green tax, which Danish
 // owners know per half year (it is charged every 6 months) but is stored per month.
@@ -105,10 +116,7 @@ export function newCar(overrides = {}) {
     greenTaxMo: 0,
     maintenanceMo: 0,
     parkingMo: 0,
-    depreciationAuto: true,
-    maintenanceAuto: true,
-    serviceIncluded: true,
-    tyresIncluded: false,
+    ...SWITCH_DEFAULTS,
     ...overrides,
   };
 }
@@ -161,19 +169,19 @@ export function toEngineInput(
     downPayment: car.method === 'finance' ? car.downPayment : 1,
     apr: car.method === 'finance' ? car.apr : 0,
     financeMonths: car.method === 'finance' ? car.financeMonths : 0,
-    depreciationAuto: car.depreciationAuto !== false,
+    depreciationAuto: switchOn(car, 'depreciationAuto'),
     depreciationFactor: car.depreciationFactor,
     leaseMo: lease ? car.leaseMo : 0,
     oneTimePayment: lease ? car.oneTimePayment : 0,
     returnFee: lease ? car.returnFee : 0,
     leaseYears: lease ? car.yearsOfUse : 0,
-    serviceIncluded: car.serviceIncluded !== false,
-    tyresIncluded: car.tyresIncluded === true,
+    serviceIncluded: switchOn(car, 'serviceIncluded'),
+    tyresIncluded: switchOn(car, 'tyresIncluded'),
     kmPerYear,
     kmPerUnit: car.kmPerUnit, // fuel and electricity prices come from the settings
     insuranceMo: car.insuranceMo,
     greenTaxMo: car.greenTaxMo,
-    maintenanceAuto: car.maintenanceAuto !== false,
+    maintenanceAuto: switchOn(car, 'maintenanceAuto'),
     maintenanceMo: car.maintenanceMo,
     parkingMo: car.parkingMo,
   };

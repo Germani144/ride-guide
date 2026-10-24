@@ -54,7 +54,6 @@ const en = {
     fuel: ['Fuel', ''],
     plate: ['License plate', ''],
     price: ['Price', 'kr'],
-    yearsOfUse: ['How many years you will keep it', 'years'],
     yearsOfUseLease: [
       'Lease period',
       'years',
@@ -71,11 +70,8 @@ const en = {
     leaseMo: ['Monthly lease', 'kr / month'],
     oneTimePayment: ['One-time payment', 'kr', 'Paid when the lease starts.'],
     returnFee: ['Return fee', 'kr', 'Charged when you hand the car back.'],
-    kmPerYear: ['Kilometres per year', 'km'],
     kmPerUnit: ['Fuel use', 'km per litre'],
     kmPerUnitEl: ['Energy use', 'km per kWh'],
-    pricePerUnit: ['Fuel price', 'kr per litre'],
-    pricePerUnitEl: ['Electricity price at home', 'kr per kWh', 'Public charging is added from Settings.'],
     insuranceMo: ['Insurance', 'kr / month'],
     greenTaxMo: [
       'Green tax',
@@ -110,7 +106,6 @@ const en = {
   result: {
     perKm: 'kr per km',
     perMonth: 'kr per month',
-    total: 'Total cost per month',
     upfront: 'Paid up front',
     cashOut: 'Paid out per month, on average',
     spent: 'Total',
@@ -303,7 +298,6 @@ const da = {
     fuel: ['Drivmiddel', ''],
     plate: ['Nummerplade', ''],
     price: ['Pris', 'kr.'],
-    yearsOfUse: ['Hvor mange år du beholder den', 'år'],
     yearsOfUseLease: [
       'Leasingperiode',
       'år',
@@ -320,11 +314,8 @@ const da = {
     leaseMo: ['Månedlig ydelse', 'kr. / md.'],
     oneTimePayment: ['Engangsydelse', 'kr.', 'Betales ved leasingens start.'],
     returnFee: ['Tilbageleveringsgebyr', 'kr.', 'Betales, når bilen afleveres.'],
-    kmPerYear: ['Kilometer pr. år', 'km'],
     kmPerUnit: ['Forbrug', 'km pr. liter'],
     kmPerUnitEl: ['Forbrug', 'km pr. kWh'],
-    pricePerUnit: ['Brændstofpris', 'kr. pr. liter'],
-    pricePerUnitEl: ['Elpris derhjemme', 'kr. pr. kWh', 'Offentlig opladning lægges til fra Indstillinger.'],
     insuranceMo: ['Forsikring', 'kr. / md.'],
     greenTaxMo: [
       'Grøn ejerafgift',
@@ -359,7 +350,6 @@ const da = {
   result: {
     perKm: 'kr. pr. km',
     perMonth: 'kr. pr. måned',
-    total: 'Samlet pris pr. måned',
     upfront: 'Betalt ved start',
     cashOut: 'Udbetalt pr. måned i gennemsnit',
     spent: 'I alt',

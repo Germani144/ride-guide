@@ -1,7 +1,8 @@
 // Small DOM helpers and shared pieces of interface. User text only ever goes in via
 // textContent or input values, never as HTML.
 import { calculate, PART_KEYS } from './engine.js';
-import { toEngineInput, toShown } from './model.js';
+import { toEngineInput } from './model.js';
+import { money, plain } from './format.js';
 import { fmt } from './i18n.js';
 
 export function el(tag, attrs = {}, ...children) {
@@ -38,27 +39,6 @@ export const ICONS = {
   check:
     '<path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>',
 };
-
-// ---------- numbers ----------
-
-const locale = lang => (lang === 'da' ? 'da-DK' : 'en-GB');
-export function money(v, lang, digits = 0) {
-  return new Intl.NumberFormat(locale(lang), {
-    minimumFractionDigits: digits,
-    maximumFractionDigits: digits,
-  }).format(v || 0);
-}
-export function plain(v, lang) {
-  return new Intl.NumberFormat(locale(lang), { maximumFractionDigits: 2 }).format(v || 0);
-}
-
-// Value shown inside an input: percentages as %, Danish decimal comma, empty for zero.
-export function toInputText(field, v, lang) {
-  if (!v) return '';
-  const shown = +Number(toShown(field, v)).toFixed(4);
-  const s = String(shown);
-  return lang === 'da' ? s.replace('.', ',') : s;
-}
 
 // ---------- results ----------
 

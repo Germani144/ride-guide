@@ -1,14 +1,8 @@
 // Form controls used by the "New car" wizard: choice buttons, text and number fields, switches
 // and the fuel picker. Each control writes straight into the car being edited and saves.
-import { FUELS, parseNumber, fromShown } from '../model.js';
-import { el, toInputText } from '../ui.js';
-
-// Label key variants that depend on the car (electric units, lease period wording).
-export function labelKey(field, car) {
-  if (car.fuel === 'electric' && (field === 'kmPerUnit' || field === 'pricePerUnit')) return `${field}El`;
-  if (field === 'yearsOfUse' && car.method === 'lease') return 'yearsOfUseLease';
-  return field;
-}
+import { FUELS, parseNumber, fromShown, switchOn } from '../model.js';
+import { toInputText } from '../format.js';
+import { el } from '../ui.js';
 
 export function choiceList(keys, labelFor, selected, onPick) {
   return el(
@@ -102,7 +96,7 @@ export function switchField(key, car, t, ctx) {
         id,
         type: 'checkbox',
         role: 'switch',
-        checked: car[key] !== false && (key !== 'tyresIncluded' || car[key] === true),
+        checked: switchOn(car, key),
         onchange: e => {
           car[key] = e.target.checked;
           ctx.save();

@@ -158,7 +158,11 @@ src/model.js                  car data model, payment methods, migration, valida
 src/storage.js                storage adapter (localStorage today)
 src/i18n.js                   English and Danish strings
 src/seed.js                   cars from the spreadsheet
-src/ui.js                     shared interface pieces (plate, price, breakdown, formatting)
+src/ui.js                     shared interface pieces (plate, price, breakdown, bars, toast)
+src/format.js                 number formatting (English and Danish)
+src/wizard-flow.js            the New car wizard's steps: order, fields, switches (no DOM)
+src/compare.js                what the comparison highlights (no DOM)
+src/routes.js                 addresses (#/...) and which tab is active (no DOM)
 src/update.js                 "Check for updates" (asks the server which version it serves)
 src/backup.js                 backup export and import (JSON files)
 src/app.js                    state, routing (#/new, #/garage, #/history, #/car/:id,

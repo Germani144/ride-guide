@@ -1,14 +1,9 @@
 import { LANGS } from '../i18n.js';
 import { parseNumber } from '../model.js';
 import { DEFAULT_SETTINGS } from '../engine.js';
-import { el, plain, assumptionBars, toast } from '../ui.js';
+import { el, assumptionBars, toast } from '../ui.js';
+import { plain, inputNumberText } from '../format.js';
 import { fetchServedVersion, forceUpdate } from '../update.js';
-
-// Raw number for an input (no thousands separators, so it parses back the same way).
-const raw = (v, lang) => {
-  const t = String(+Number(v).toFixed(4));
-  return lang === 'da' ? t.replace('.', ',') : t;
-};
 
 const LANG_NAMES = { en: 'English', da: 'Dansk' };
 
@@ -104,8 +99,8 @@ export function renderSettings(ctx) {
           id,
           type: 'text',
           inputmode: 'decimal',
-          value: raw(shown, lang),
-          placeholder: raw(def, lang),
+          value: inputNumberText(shown, lang),
+          placeholder: inputNumberText(def, lang),
           oninput: e => {
             const v = parseNumber(e.target.value);
             s[key] = v == null || v < 0 ? DEFAULT_SETTINGS[key] : fraction ? v / 100 : v;

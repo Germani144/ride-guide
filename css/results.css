@@ -156,10 +156,6 @@
   background: var(--part-lease);
 }
 
-.part-finance {
-  background: var(--part-finance);
-}
-
 .part-depreciation {
   background: var(--part-depreciation);
 }

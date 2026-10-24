@@ -133,26 +133,3 @@ export function calculate(input, opts = {}) {
     shares,
   };
 }
-
-export function emptyCar(name = 'New car') {
-  return {
-    name,
-    year: new Date().getFullYear(),
-    yearsOfUse: 3,
-    downPayment: 1,
-    oneTimePayment: 0,
-    returnFee: 0,
-    depreciationFactor: 0,
-    kmPerUnit: 15,
-    pricePerUnit: 13,
-    kmPerYear: 12000,
-    insuranceMo: 0,
-    greenTaxMo: 0,
-    maintenanceMo: 0,
-    parkingMo: 0,
-    leaseMo: 0,
-    apr: 0,
-    financeMonths: 0,
-    price: 0,
-  };
-}

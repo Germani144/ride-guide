@@ -1,6 +1,8 @@
 // The wizard's last step (what the car costs, with save buttons) and the list of answers,
 // which a car's own page shows too.
-import { DRIVING_FIELDS, costFields, runningFields, toShown } from '../model.js';
+import { DRIVING_FIELDS, costFields, runningFields, toShown, switchOn } from '../model.js';
+import { plain } from '../format.js';
+import { labelKey } from '../wizard-flow.js';
 import {
   el,
   euStrip,
@@ -8,24 +10,22 @@ import {
   priceBlock,
   factsList,
   breakdownBar,
-  plain,
   carTitle,
   assumptionBars,
 } from '../ui.js';
-import { labelKey } from './fields.js';
 
-export function renderResult(ctx, d) {
+export function renderResult(ctx, draft) {
   const { state, t } = ctx;
-  const car = d.car;
+  const car = draft.car;
   const lang = state.lang;
   const r = evaluate(car, state.settings);
   const { bar, legend } = breakdownBar(r.parts, t, lang);
-  const editing = Boolean(d.editingId);
+  const editing = Boolean(draft.editingId);
 
   const change = step => {
-    d.trail.push('result');
-    d.jump = true;
-    d.step = step;
+    draft.trail.push('result');
+    draft.jump = true;
+    draft.step = step;
     ctx.save();
     ctx.render({ animate: true });
   };
@@ -82,12 +82,7 @@ export function answers(car, t, lang, onChange) {
   };
   const row = f => el('div', {}, el('dt', {}, t.fields[labelKey(f, car)][0]), el('dd', {}, val(f)));
   const flag = key =>
-    el(
-      'div',
-      {},
-      el('dt', {}, t.switches[key][0]),
-      el('dd', {}, car[key] === true || (car[key] !== false && key !== 'tyresIncluded') ? t.yes : t.no),
-    );
+    el('div', {}, el('dt', {}, t.switches[key][0]), el('dd', {}, switchOn(car, key) ? t.yes : t.no));
   const groups = [
     [
       'car',
@@ -114,7 +109,7 @@ export function answers(car, t, lang, onChange) {
       'running',
       [
         ...runningFields(car).map(row),
-        car.method === 'lease' && car.serviceIncluded !== false ? null : flag('maintenanceAuto'),
+        car.method === 'lease' && switchOn(car, 'serviceIncluded') ? null : flag('maintenanceAuto'),
       ],
     ],
   ];

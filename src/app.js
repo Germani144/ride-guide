@@ -6,7 +6,9 @@ import { STRINGS } from './i18n.js';
 import { SEED_CARS } from './seed.js';
 import { toast } from './ui.js';
 import { renderTabs } from './views/tabs.js';
-import { renderWizard, startDraft } from './views/wizard.js';
+import { renderWizard } from './views/wizard.js';
+import { newDraft } from './wizard-flow.js';
+import { parseRoute, keepsCompareSelection } from './routes.js';
 import { renderGarage, renderHistory, renderCar, renderCompare } from './views/cars.js';
 import { renderSettings } from './views/settings.js';
 
@@ -107,7 +109,7 @@ function deleteCar(id) {
 function editCar(id) {
   const car = state.cars.find(c => c.id === id);
   if (!car) return;
-  state.draft = startDraft(state, {
+  state.draft = newDraft({
     car: { ...car },
     hasPlate: car.plate ? 'yes' : 'no',
     step: 'result',
@@ -121,7 +123,7 @@ function editCar(id) {
 function tryOtherMethod(id) {
   const car = state.cars.find(c => c.id === id);
   if (!car) return;
-  state.draft = startDraft(state, {
+  state.draft = newDraft({
     car: { ...car, id: makeId(), mine: false },
     hasPlate: car.plate ? 'yes' : 'no',
     step: 'method',
@@ -154,15 +156,14 @@ async function importBackup(file) {
 
 // ---------- rendering ----------
 
-function currentCar(route) {
-  const id = decodeURIComponent(route.split('/')[2] || '');
+function findCar(id) {
   return state.cars.find(c => c.id === id);
 }
 
 let lastRoute = '';
 function render({ animate = false, back = false } = {}) {
-  const route = location.hash || '#/new';
-  if (!route.startsWith('#/history') && !route.startsWith('#/car/') && !route.startsWith('#/compare')) {
+  const { route, name, id, ids } = parseRoute(location.hash);
+  if (!keepsCompareSelection(route)) {
     ui.selecting = false;
     ui.selected.clear();
   }
@@ -186,18 +187,17 @@ function render({ animate = false, back = false } = {}) {
   document.documentElement.lang = state.lang;
 
   let node;
-  const [, name, arg] = route.split('/');
   if (name === 'garage') node = renderGarage(ctx);
   else if (name === 'history') node = renderHistory(ctx);
-  else if (name === 'car') node = renderCar(ctx, decodeURIComponent(arg || ''));
-  else if (name === 'compare') node = renderCompare(ctx, (arg || '').split(',').map(decodeURIComponent));
+  else if (name === 'car') node = renderCar(ctx, id);
+  else if (name === 'compare') node = renderCompare(ctx, ids);
   else if (name === 'settings') node = renderSettings(ctx);
   else node = renderWizard(ctx);
 
   const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   if (animate && !reduce) node.classList.add(back ? 'enter-back' : 'enter');
   view.replaceChildren(node);
-  renderTabs(route, t(), Boolean(currentCar(route)?.mine));
+  renderTabs(route, t(), name === 'car' && Boolean(findCar(id)?.mine));
   if (route !== lastRoute || animate) window.scrollTo(0, 0);
   lastRoute = route;
   document.title = `RideGuide`;
