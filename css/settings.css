@@ -1,0 +1,25 @@
+/* Settings page. */
+
+.setting {
+  padding: 18px 0;
+  border-top: 1px solid var(--line);
+}
+
+.setting h2 {
+  font: 600 1.15rem var(--sans);
+  margin-bottom: 10px;
+}
+
+.setting .actions {
+  margin-top: 14px;
+}
+
+.input-wrap.setting-input {
+  max-width: 260px;
+}
+
+.update-row {
+  display: flex;
+  justify-content: center;
+  margin: 4px 0 16px;
+}

@@ -1,0 +1,237 @@
+/* Results: price per km and month, facts, the breakdown bar and legend, the answers list. */
+
+.result-head,
+.car-head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.result-name {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.price {
+  margin-top: 18px;
+  padding: 20px 0 16px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.price-km {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.price-num {
+  font: 700 clamp(3.6rem, 18vw, 4.75rem) / 0.9 var(--cond);
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.price-unit {
+  font: 600 1.25rem var(--cond);
+  color: var(--ink-2);
+}
+
+.price-month {
+  margin-top: 8px;
+  color: var(--ink-2);
+  font-size: 1.05rem;
+}
+
+.price-month-num {
+  color: var(--asphalt);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.price.compact {
+  margin-top: 10px;
+  padding: 12px 0 10px;
+}
+
+.price.compact .price-num {
+  font-size: clamp(1.9rem, 8vw, 2.6rem);
+}
+
+.price.compact .price-unit {
+  font-size: 0.95rem;
+}
+
+.price.compact .price-month {
+  font-size: 0.9rem;
+  margin-top: 4px;
+}
+
+.facts {
+  margin: 14px 0 0;
+}
+
+.facts > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.facts dt {
+  color: var(--ink-2);
+}
+
+.facts dd {
+  margin: 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.facts.small {
+  font-size: 0.95rem;
+}
+
+.note {
+  color: var(--ink-2);
+  font-size: 0.9rem;
+  margin-top: 10px;
+}
+
+.result h3,
+.car-view h3 {
+  font: 600 1.2rem var(--cond);
+  margin: 26px 0 10px;
+}
+
+.bar {
+  display: flex;
+  height: 14px;
+  border-radius: 7px;
+  overflow: hidden;
+  background: var(--line-soft);
+  gap: 2px;
+}
+
+.bar span {
+  display: block;
+  height: 100%;
+  min-width: 3px;
+}
+
+.legend {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 0;
+}
+
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 0;
+}
+
+.legend i {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.legend-name {
+  flex: 1;
+}
+
+.legend-val {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.part-lease {
+  background: var(--part-lease);
+}
+
+.part-finance {
+  background: var(--part-finance);
+}
+
+.part-depreciation {
+  background: var(--part-depreciation);
+}
+
+.part-energy {
+  background: var(--part-energy);
+}
+
+.part-insurance {
+  background: var(--part-insurance);
+}
+
+.part-greenTax {
+  background: var(--part-greenTax);
+}
+
+.part-maintenance {
+  background: var(--part-maintenance);
+}
+
+.part-parking {
+  background: var(--part-parking);
+}
+
+.part-interest {
+  background: var(--part-finance);
+}
+
+.part-capital {
+  background: var(--part-capital);
+}
+
+.part-tyres {
+  background: var(--part-tyres);
+}
+
+.part-other {
+  background: var(--part-other);
+}
+
+.part-buffer {
+  background: var(--part-buffer);
+}
+
+.legend li.saving {
+  color: var(--good);
+}
+
+.legend li.saving i {
+  background: transparent;
+  border: 2px solid var(--good);
+}
+
+.answers {
+  margin-top: 8px;
+}
+
+.answer-group {
+  margin-top: 18px;
+}
+
+.answer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.answer-head h3 {
+  margin: 0;
+  font: 600 1.05rem var(--sans);
+}
+
+.answers-title {
+  margin-bottom: 0 !important;
+}

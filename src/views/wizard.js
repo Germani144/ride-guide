@@ -3,31 +3,16 @@
 import {
   newCar,
   METHODS,
-  FUELS,
   DRIVING_FIELDS,
   costFields,
   runningFields,
   formatPlate,
-  parseNumber,
   validate,
-  toShown,
-  fromShown,
 } from '../model.js';
 import { fmt } from '../i18n.js';
-import {
-  el,
-  svg,
-  ICONS,
-  euStrip,
-  evaluate,
-  priceBlock,
-  factsList,
-  breakdownBar,
-  toInputText,
-  plain,
-  carTitle,
-  assumptionBars,
-} from '../ui.js';
+import { el, svg, ICONS, euStrip, carTitle } from '../ui.js';
+import { labelKey, choiceList, textField, numberField, switchField, fuelPicker } from './fields.js';
+import { renderResult } from './result.js';
 
 const FIRST = 'plate';
 const NEXT = {
@@ -63,13 +48,6 @@ function fieldsFor(step, car) {
   if (step === 'driving') return DRIVING_FIELDS;
   if (step === 'running') return runningFields(car);
   return [];
-}
-
-// Label key variants that depend on the car (electric units, lease period wording).
-function labelKey(field, car) {
-  if (car.fuel === 'electric' && (field === 'kmPerUnit' || field === 'pricePerUnit')) return `${field}El`;
-  if (field === 'yearsOfUse' && car.method === 'lease') return 'yearsOfUseLease';
-  return field;
 }
 
 export function renderWizard(ctx) {
@@ -182,26 +160,6 @@ export function renderWizard(ctx) {
   return el('div', { class: 'wizard' }, intro, head, track, nav, body);
 }
 
-function choiceList(keys, labelFor, selected, onPick) {
-  return el(
-    'div',
-    { class: 'choices' },
-    keys.map(k => {
-      const [title, sub] = labelFor(k);
-      return el(
-        'button',
-        {
-          type: 'button',
-          class: `choice${selected === k ? ' selected' : ''}`,
-          onclick: () => onPick(k),
-        },
-        el('span', { class: 'choice-title' }, title),
-        el('span', { class: 'choice-sub' }, sub),
-      );
-    }),
-  );
-}
-
 function renderForm(ctx, d, advance) {
   const { state, t } = ctx;
   const car = d.car;
@@ -309,237 +267,4 @@ function renderForm(ctx, d, advance) {
     advance();
   });
   return form;
-}
-
-function textField(field, value, t, onValue, ctx, errorNodes) {
-  const [label, , placeholder] = t.fields[field];
-  const id = `f-${field}`;
-  errorNodes[field] = el('p', { class: 'error', id: `err-${field}` });
-  return el(
-    'div',
-    { class: 'field' },
-    el('label', { for: id }, label),
-    el(
-      'div',
-      { class: 'input-wrap' },
-      el('input', {
-        id,
-        type: 'text',
-        value,
-        placeholder,
-        'data-field': field,
-        autocomplete: 'off',
-        maxlength: '60',
-        'aria-describedby': `err-${field}`,
-        oninput: e => {
-          onValue(e.target.value);
-          ctx.save();
-        },
-      }),
-    ),
-    errorNodes[field],
-  );
-}
-
-function numberField(field, car, t, lang, ctx, errorNodes, { label = field, decimals = true } = {}) {
-  const [name, unit, help] = t.fields[label];
-  const id = `f-${field}`;
-  errorNodes[field] = el('p', { class: 'error', id: `err-${field}` });
-  const input = el('input', {
-    id,
-    type: 'text',
-    inputmode: decimals ? 'decimal' : 'numeric',
-    'data-field': field,
-    value: toInputText(field, car[field], lang),
-    placeholder: '0',
-    autocomplete: 'off',
-    'aria-describedby': `err-${field}${help ? ` help-${field}` : ''}`,
-    oninput: e => {
-      const v = parseNumber(e.target.value);
-      car[field] = v == null ? 0 : fromShown(field, v);
-      ctx.save();
-    },
-  });
-  return el(
-    'div',
-    { class: 'field' },
-    el('label', { for: id }, name),
-    el('div', { class: 'input-wrap' }, input, unit ? el('span', { class: 'unit' }, unit) : null),
-    help ? el('p', { class: 'hint', id: `help-${field}` }, help) : null,
-    errorNodes[field],
-  );
-}
-
-function switchField(key, car, t, ctx) {
-  const [label, help] = t.switches[key];
-  const id = `s-${key}`;
-  return el(
-    'div',
-    { class: 'field switch-field' },
-    el(
-      'label',
-      { class: 'switch', for: id },
-      el('input', {
-        id,
-        type: 'checkbox',
-        role: 'switch',
-        checked: car[key] !== false && (key !== 'tyresIncluded' || car[key] === true),
-        onchange: e => {
-          car[key] = e.target.checked;
-          ctx.save();
-          ctx.render();
-        },
-      }),
-      el('span', { class: 'switch-text' }, label),
-    ),
-    help ? el('p', { class: 'hint' }, help) : null,
-  );
-}
-
-function fuelPicker(car, t, ctx) {
-  const group = el('div', { class: 'segmented', role: 'radiogroup', 'aria-label': t.fields.fuel[0] });
-  for (const f of FUELS) {
-    group.append(
-      el(
-        'button',
-        {
-          type: 'button',
-          role: 'radio',
-          'aria-checked': String(car.fuel === f),
-          onclick: e => {
-            car.fuel = f;
-            for (const b of group.children) b.setAttribute('aria-checked', String(b === e.currentTarget));
-            ctx.save();
-          },
-        },
-        t.fuel[f],
-      ),
-    );
-  }
-  return el('div', { class: 'field' }, el('span', { class: 'label' }, t.fields.fuel[0]), group);
-}
-
-function renderResult(ctx, d) {
-  const { state, t } = ctx;
-  const car = d.car;
-  const lang = state.lang;
-  const r = evaluate(car, state.settings);
-  const { bar, legend } = breakdownBar(r.parts, t, lang);
-  const editing = Boolean(d.editingId);
-
-  const change = step => {
-    d.trail.push('result');
-    d.jump = true;
-    d.step = step;
-    ctx.save();
-    ctx.render({ animate: true });
-  };
-
-  return el(
-    'div',
-    { class: 'result' },
-    el('h2', {}, t.steps.result.title),
-    el(
-      'div',
-      { class: 'result-head' },
-      car.plate
-        ? el('span', { class: 'plate plate-md' }, euStrip(), el('span', { class: 'plate-text' }, car.plate))
-        : null,
-      el('p', { class: 'result-name' }, carTitle(car, t)),
-    ),
-    priceBlock(r, t, lang),
-    assumptionBars(ctx),
-    factsList(r, car, t, lang, state.settings),
-    el('h3', {}, t.result.breakdown),
-    bar,
-    legend,
-    answers(car, t, lang, change),
-    el(
-      'div',
-      { class: 'actions stack' },
-      editing
-        ? el(
-            'button',
-            { type: 'button', class: 'primary', onclick: () => ctx.saveDraft({}) },
-            t.result.saveChanges,
-          )
-        : [
-            el(
-              'button',
-              { type: 'button', class: 'primary', onclick: () => ctx.saveDraft({ mine: true }) },
-              t.result.saveMine,
-            ),
-            el(
-              'button',
-              { type: 'button', class: 'secondary', onclick: () => ctx.saveDraft({ mine: false }) },
-              t.result.save,
-            ),
-          ],
-    ),
-  );
-}
-
-export function answers(car, t, lang, onChange) {
-  const val = f => {
-    const unit = t.fields[labelKey(f, car)][1];
-    const n = toShown(f, car[f]);
-    return `${plain(n, lang)}${unit ? ` ${unit}` : ''}`;
-  };
-  const row = f => el('div', {}, el('dt', {}, t.fields[labelKey(f, car)][0]), el('dd', {}, val(f)));
-  const flag = key =>
-    el(
-      'div',
-      {},
-      el('dt', {}, t.switches[key][0]),
-      el('dd', {}, car[key] === true || (car[key] !== false && key !== 'tyresIncluded') ? t.yes : t.no),
-    );
-  const groups = [
-    [
-      'car',
-      'plate',
-      [
-        el('div', {}, el('dt', {}, t.fields.name[0]), el('dd', {}, carTitle(car, t))),
-        car.plate ? el('div', {}, el('dt', {}, t.fields.plate[0]), el('dd', {}, car.plate)) : null,
-        el('div', {}, el('dt', {}, t.fields.year[0]), el('dd', {}, String(car.year || ''))),
-        el('div', {}, el('dt', {}, t.fields.fuel[0]), el('dd', {}, t.fuel[car.fuel])),
-      ],
-    ],
-    [
-      'payment',
-      'method',
-      [
-        el('div', {}, el('dt', {}, t.result.methodLabel), el('dd', {}, t.steps.method[car.method][0])),
-        ...costFields(car).map(row),
-        ...(car.method === 'lease' ? ['serviceIncluded', 'tyresIncluded'] : ['depreciationAuto']).map(flag),
-      ],
-    ],
-    ['driving', 'driving', DRIVING_FIELDS.map(row)],
-    [
-      'running',
-      'running',
-      [
-        ...runningFields(car).map(row),
-        car.method === 'lease' && car.serviceIncluded !== false ? null : flag('maintenanceAuto'),
-      ],
-    ],
-  ];
-  return el(
-    'div',
-    { class: 'answers' },
-    groups.map(([key, step, rows]) =>
-      el(
-        'section',
-        { class: 'answer-group' },
-        el(
-          'div',
-          { class: 'answer-head' },
-          el('h3', {}, t.result.groups[key]),
-          onChange
-            ? el('button', { type: 'button', class: 'link', onclick: () => onChange(step) }, t.result.change)
-            : null,
-        ),
-        el('dl', { class: 'facts small' }, rows),
-      ),
-    ),
-  );
 }

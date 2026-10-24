@@ -15,7 +15,7 @@ import {
   carSubline,
   assumptionBars,
 } from '../ui.js';
-import { answers } from './wizard.js';
+import { answers } from './result.js';
 
 export const MAX_COMPARE = 3;
 

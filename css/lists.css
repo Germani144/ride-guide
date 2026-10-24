@@ -1,0 +1,259 @@
+/* Garage and History lists, a car's page and the comparison. */
+
+.rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--line-soft);
+}
+
+.rows li + li {
+  border-top: 1px solid var(--line-soft);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  text-decoration: none;
+  color: inherit;
+  min-height: 76px;
+}
+
+.row-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.row-name {
+  font-weight: 600;
+  font-size: 1.05rem;
+  overflow-wrap: anywhere;
+}
+
+.row-sub {
+  color: var(--ink-2);
+  font-size: 0.92rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+}
+
+.row-figures {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.row-km {
+  font: 700 1.6rem/1 var(--cond);
+  font-variant-numeric: tabular-nums;
+}
+
+.row-km span {
+  font: 600 0.85rem var(--cond);
+  color: var(--ink-2);
+}
+
+.row-month {
+  color: var(--ink-2);
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+.mine-tag {
+  color: var(--good);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.row.selectable {
+  cursor: pointer;
+}
+
+.row.selectable input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.row .check {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  color: transparent;
+}
+
+.row .check .icon {
+  width: 16px;
+  height: 16px;
+}
+
+.row.selected .check {
+  background: var(--asphalt);
+  border-color: var(--asphalt);
+  color: var(--on-dark);
+}
+
+.row.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.row.selectable:focus-within {
+  outline: 3px solid var(--asphalt);
+  outline-offset: -3px;
+  border-radius: var(--radius);
+}
+
+.compare-bar {
+  position: sticky;
+  bottom: calc(var(--tabs-h) + env(safe-area-inset-bottom) + 8px);
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 10px 10px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.compare-bar p {
+  flex: 1;
+  color: var(--ink-2);
+  font-size: 0.92rem;
+}
+
+.empty {
+  padding: 32px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.empty p {
+  font-size: 1.1rem;
+  max-width: 34ch;
+}
+
+.car-view .car-head {
+  margin-top: 8px;
+}
+
+.compare-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.compare-grid.n2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.compare-grid.n3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.compare-col {
+  background: var(--surface);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+}
+
+.compare-col.best {
+  border: 2px solid var(--good);
+  padding: 11px;
+}
+
+.compare-col h2 {
+  font: 600 1.05rem/1.2 var(--sans);
+  overflow-wrap: anywhere;
+}
+
+.compare-col h2 a {
+  text-decoration: none;
+}
+
+.compare-col .price {
+  width: 100%;
+}
+
+.compare-col .facts {
+  width: 100%;
+  margin-top: 4px;
+}
+
+.compare-col .facts {
+  font-size: 0.82rem;
+}
+
+.compare-col .facts > div {
+  flex-direction: column;
+  gap: 0;
+  padding: 5px 0;
+}
+
+.compare-col .facts dd {
+  font-size: 0.95rem;
+}
+
+.compare-col .row-sub {
+  font-size: 0.85rem;
+}
+
+.compare-col .facts dd {
+  text-align: left;
+}
+
+.compare-col .bar {
+  width: 100%;
+  margin-top: 6px;
+}
+
+.best-tag {
+  color: var(--good);
+  font-weight: 600;
+  font-size: 0.85rem;
+  min-height: 1.3em;
+}
+
+.diff {
+  color: var(--ink-2);
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.compare-grid.n3 .plate-text {
+  font-size: 0.85rem;
+  padding: 3px 5px 2px;
+}
+
+.compare-view .legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+}
+
+.compare-view .legend-name {
+  flex: none;
+}

@@ -1,0 +1,134 @@
+/* RideGuide. Danish car vernacular: concrete ground, asphalt ink, the white number plate
+   with its red border as the one loud element. Barlow is drawn from road signs and plates. */
+
+@font-face {
+  font-family: Barlow;
+  font-weight: 400;
+  font-display: swap;
+  src: url(../fonts/barlow-latin-400-normal.woff2) format('woff2');
+}
+
+@font-face {
+  font-family: Barlow;
+  font-weight: 500;
+  font-display: swap;
+  src: url(../fonts/barlow-latin-500-normal.woff2) format('woff2');
+}
+
+@font-face {
+  font-family: Barlow;
+  font-weight: 600;
+  font-display: swap;
+  src: url(../fonts/barlow-latin-600-normal.woff2) format('woff2');
+}
+
+@font-face {
+  font-family: 'Barlow Condensed';
+  font-weight: 600;
+  font-display: swap;
+  src: url(../fonts/barlow-condensed-latin-600-normal.woff2) format('woff2');
+}
+
+@font-face {
+  font-family: 'Barlow Condensed';
+  font-weight: 700;
+  font-display: swap;
+  src: url(../fonts/barlow-condensed-latin-700-normal.woff2) format('woff2');
+}
+
+:root {
+  --concrete: #e8ebed;
+  --surface: #ffffff;
+  --asphalt: #1c252c;
+  --ink-2: #56626b;
+  --line: #cfd5d9;
+  --line-soft: #e1e5e8;
+  --plate-red: #c8102e;
+  --eu-blue: #003399;
+  --good: #1d6b47;
+  --on-dark: #ffffff;
+  --part-lease: #3c5a78;
+  --part-finance: #b5523b;
+  --part-depreciation: #6a6fb8;
+  --part-energy: #2f8270;
+  --part-insurance: #b38533;
+  --part-greenTax: #7d9a3a;
+  --part-maintenance: #8a5a9e;
+  --part-parking: #7a868d;
+  --part-capital: #4b8fb0;
+  --part-tyres: #3d3d3d;
+  --part-other: #a8778a;
+  --part-buffer: #b9c0c5;
+  --radius: 14px;
+  --tabs-h: 64px;
+  --sans: Barlow, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --cond: 'Barlow Condensed', Barlow, system-ui, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --concrete: #14181b;
+    --surface: #1d2328;
+    --asphalt: #e9edf0;
+    --ink-2: #9aa6ae;
+    --line: #34404a;
+    --line-soft: #283139;
+    --good: #5cc28f;
+    --on-dark: #14181b;
+    --part-lease: #7b9cc0;
+    --part-finance: #e08467;
+    --part-depreciation: #9da2e6;
+    --part-energy: #5bb7a2;
+    --part-insurance: #d9ad5e;
+    --part-greenTax: #a9c466;
+    --part-maintenance: #bb8bd0;
+    --part-parking: #9eabb2;
+    --part-capital: #7cc0e0;
+    --part-tyres: #c9c9c9;
+    --part-other: #d6a5b8;
+    --part-buffer: #5d6870;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--concrete);
+  color: var(--asphalt);
+  font: 400 1rem/1.5 var(--sans);
+  padding: 0 16px calc(var(--tabs-h) + 24px + env(safe-area-inset-bottom));
+}
+
+main {
+  max-width: 560px;
+  margin: 0 auto;
+  outline: none;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-weight: 600;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+}
+
+.icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}

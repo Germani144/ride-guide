@@ -1,0 +1,109 @@
+/* The "New car" wizard: progress, steps and choices. */
+
+.intro {
+  padding: 18px 0 22px;
+}
+
+.intro h1 {
+  font: 700 clamp(2.2rem, 9vw, 3rem) / 1.02 var(--cond);
+  letter-spacing: -0.005em;
+  max-width: 14ch;
+}
+
+.intro p {
+  margin-top: 10px;
+  color: var(--ink-2);
+  font-size: 1.05rem;
+  max-width: 40ch;
+}
+
+.editing {
+  padding-top: 10px;
+  font-weight: 600;
+}
+
+.wizard-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.step-count {
+  color: var(--ink-2);
+  font-size: 0.92rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.track {
+  height: 4px;
+  background: var(--line-soft);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.track span {
+  display: block;
+  height: 100%;
+  background: var(--plate-red);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.step {
+  padding-top: 18px;
+}
+
+.step h2,
+.form h2,
+.result h2 {
+  font: 600 clamp(1.7rem, 7vw, 2.1rem) / 1.1 var(--cond);
+  max-width: 20ch;
+}
+
+.step-hint {
+  margin-top: 18px;
+}
+
+.choices {
+  display: grid;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.choice {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  text-align: left;
+  min-height: 76px;
+  padding: 14px 18px;
+  background: var(--surface);
+  color: var(--asphalt);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-weight: 400;
+}
+
+.choice:hover {
+  border-color: var(--ink-2);
+}
+
+.choice.selected {
+  border: 2px solid var(--asphalt);
+  padding: 13px 17px;
+}
+
+.choice-title {
+  font: 600 1.2rem/1.2 var(--sans);
+}
+
+.choice-sub {
+  color: var(--ink-2);
+  font-size: 0.95rem;
+}
+
+.plate-field {
+  margin-top: 24px;
+}

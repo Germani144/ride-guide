@@ -149,7 +149,7 @@ saved, so switching back loses nothing).
 ## Structure
 
 ```
-index.html, styles.css        page shell and styling (light and dark)
+index.html, css/              page shell and styling (light and dark), one stylesheet per area
 src/version.js                app version (loading screen, Settings, offline cache name)
 src/boot.js                   shows the version in the header and on the loading screen
 src/engine.js                 cost engine: pure functions, no DOM or storage
@@ -159,11 +159,16 @@ src/storage.js                storage adapter (localStorage today)
 src/i18n.js                   English and Danish strings
 src/seed.js                   cars from the spreadsheet
 src/ui.js                     shared interface pieces (plate, price, breakdown, formatting)
+src/update.js                 "Check for updates" (asks the server which version it serves)
+src/backup.js                 backup export and import (JSON files)
 src/app.js                    state, routing (#/new, #/garage, #/history, #/car/:id,
                               #/compare/:ids, #/settings) and actions
-src/views/wizard.js           New car decision tree
+src/views/wizard.js           New car decision tree (one question per screen)
+src/views/fields.js           the wizard's form controls (fields, choices, switches)
+src/views/result.js           the wizard's result screen and the list of answers
 src/views/cars.js             Garage, History, car page, comparison
 src/views/settings.js         settings
+src/views/tabs.js             bottom tab bar
 fonts/                        Barlow and Barlow Condensed (SIL Open Font License, OFL.txt)
 sw.js, manifest.webmanifest   offline support and install
 data/, test/                  spreadsheet fixtures and tests

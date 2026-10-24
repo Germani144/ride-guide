@@ -212,3 +212,20 @@ test('the update check reads the version from the served src/version.js', async 
   assert.equal(versionFromSource(js), pkg.version);
   assert.equal(versionFromSource('<html>404</html>'), null);
 });
+
+test('every file the app loads is in the offline cache list (SHELL in sw.js)', async () => {
+  const { readdirSync } = await import('node:fs');
+  const sw = readFileSync(new URL('../sw.js', import.meta.url), 'utf8');
+  const shell = new Set([...sw.matchAll(/'\.\/([^']+)'/g)].map(m => m[1]));
+  const list = dir =>
+    readdirSync(new URL(`../${dir}`, import.meta.url), { withFileTypes: true }).flatMap(e =>
+      e.isDirectory() ? list(`${dir}/${e.name}`) : [`${dir}/${e.name}`],
+    );
+  // engine-sheet.js is only used by the tests.
+  const appFiles = [...list('src'), ...list('css')].filter(f => f !== 'src/engine-sheet.js');
+  for (const f of appFiles) assert.ok(shell.has(f), `${f} is missing from SHELL in sw.js`);
+  for (const f of shell) {
+    if (f.startsWith('src/') || f.startsWith('css/'))
+      assert.ok(appFiles.includes(f), `SHELL lists ${f}, which does not exist`);
+  }
+});

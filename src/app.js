@@ -1,17 +1,17 @@
 // App shell: state, routing and actions. Views live in src/views/.
 import { migrate, emptyState, sanitizeCar, makeId } from './model.js';
+import { downloadBackup, readBackup } from './backup.js';
 import { createLocalStorageAdapter } from './storage.js';
 import { STRINGS } from './i18n.js';
 import { SEED_CARS } from './seed.js';
-import { el, svg, ICONS, toast } from './ui.js';
+import { toast } from './ui.js';
+import { renderTabs } from './views/tabs.js';
 import { renderWizard, startDraft } from './views/wizard.js';
 import { renderGarage, renderHistory, renderCar, renderCompare } from './views/cars.js';
 import { renderSettings } from './views/settings.js';
 
 const storage = createLocalStorageAdapter();
 const view = document.getElementById('view');
-const tabs = document.getElementById('tabs');
-const settingsLink = document.getElementById('settings-link');
 
 export const VERSION = `v${globalThis.RIDEGUIDE_VERSION ?? '?'}`;
 const SPLASH_MIN_MS = 700; // long enough to read the version on the loading screen
@@ -133,26 +133,12 @@ function tryOtherMethod(id) {
 }
 
 function exportBackup() {
-  const data = { ...state, draft: null, exportedAt: new Date().toISOString() };
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const a = el('a', {
-    href: URL.createObjectURL(blob),
-    download: `rideguide-${new Date().toISOString().slice(0, 10)}.json`,
-  });
-  document.body.append(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  downloadBackup(state);
 }
 
 async function importBackup(file) {
   const s = t();
-  let next;
-  try {
-    next = migrate(JSON.parse(await file.text()), state.lang);
-  } catch {
-    next = null;
-  }
+  const next = await readBackup(file, state.lang);
   if (!next) {
     alert(s.settings.importError);
     return;
@@ -167,33 +153,6 @@ async function importBackup(file) {
 }
 
 // ---------- rendering ----------
-
-const TABS = [
-  ['#/new', 'new', ICONS.plus],
-  ['#/garage', 'garage', ICONS.garage],
-  ['#/history', 'history', ICONS.history],
-];
-
-function renderTabs(route) {
-  const s = t();
-  tabs.replaceChildren(
-    ...TABS.map(([href, key, icon]) => {
-      const active =
-        route.startsWith(href) ||
-        (key === 'history' &&
-          (route.startsWith('#/compare') || (route.startsWith('#/car/') && !currentCar(route)?.mine))) ||
-        (key === 'garage' && route.startsWith('#/car/') && currentCar(route)?.mine);
-      return el(
-        'a',
-        { href, class: 'tab', 'aria-current': active ? 'page' : null },
-        svg(icon),
-        el('span', {}, s.nav[key]),
-      );
-    }),
-  );
-  settingsLink.setAttribute('aria-label', s.nav.settings);
-  settingsLink.setAttribute('aria-current', route.startsWith('#/settings') ? 'page' : 'false');
-}
 
 function currentCar(route) {
   const id = decodeURIComponent(route.split('/')[2] || '');
@@ -238,7 +197,7 @@ function render({ animate = false, back = false } = {}) {
   const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   if (animate && !reduce) node.classList.add(back ? 'enter-back' : 'enter');
   view.replaceChildren(node);
-  renderTabs(route);
+  renderTabs(route, t(), Boolean(currentCar(route)?.mine));
   if (route !== lastRoute || animate) window.scrollTo(0, 0);
   lastRoute = route;
   document.title = `RideGuide`;

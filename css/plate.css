@@ -1,0 +1,105 @@
+/* The Danish number plate, used in lists, on car pages and as the plate input. */
+
+.plate {
+  display: inline-flex;
+  align-items: stretch;
+  background: #fff;
+  color: #111;
+  border: 2px solid var(--plate-red);
+  border-radius: 5px;
+  overflow: hidden;
+  vertical-align: middle;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.plate-eu {
+  background: var(--eu-blue);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 3px 1px;
+}
+
+.plate-eu b {
+  font: 600 0.6rem/1 var(--sans);
+  letter-spacing: 0.02em;
+}
+
+.plate-stars {
+  width: 14px;
+  height: 14px;
+}
+
+.plate-text {
+  font: 700 1rem/1 var(--cond);
+  letter-spacing: 0.06em;
+  padding: 4px 8px 3px;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+}
+
+.plate-md .plate-text {
+  font-size: 1.5rem;
+  padding: 6px 12px 5px;
+}
+
+.plate-md .plate-stars {
+  width: 20px;
+  height: 20px;
+}
+
+.plate-md .plate-eu b {
+  font-size: 0.8rem;
+}
+
+.plate-lg {
+  width: 100%;
+  border-width: 3px;
+  border-radius: 8px;
+}
+
+.plate-lg .plate-eu {
+  padding: 6px 8px 5px;
+}
+
+.plate-lg .plate-stars {
+  width: 30px;
+  height: 30px;
+}
+
+.plate-lg .plate-eu b {
+  font-size: 1.15rem;
+}
+
+.plate-input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: #fff;
+  color: #111;
+  text-align: center;
+  font: 700 clamp(2.4rem, 13vw, 3.6rem) / 1 var(--cond);
+  letter-spacing: 0.06em;
+  padding: 14px 8px 10px;
+  text-transform: uppercase;
+}
+
+.plate-input::placeholder {
+  color: #c4c9cd;
+}
+
+.plate-input:focus {
+  outline: none;
+}
+
+.field label.plate-edit {
+  display: flex;
+  margin: 0;
+}
+
+.plate-edit:focus-within {
+  box-shadow: 0 0 0 3px var(--asphalt);
+}
