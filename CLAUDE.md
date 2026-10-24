@@ -1,13 +1,20 @@
 # RideGuide: working rules
 
 - Keep README.md up to date whenever a change affects usage, formulas, structure or deployment.
-- `npm test` must pass. The app's cost engine is `src/engine.js` (tested by `test/cost.test.mjs`).
+- Before pushing, `npm test` and `npm run test:browser` must both pass (`npm run test:all`).
+  The app's cost engine is `src/engine.js` (tested by `test/cost.test.mjs`).
   `src/engine-sheet.js` is "sheet mode", the spreadsheet port; it must keep matching the
   spreadsheet fixtures and is not used by the app.
+- New behaviour gets a test: a unit test for logic, a browser test (`test/browser/`) for what the
+  user does on screen. When a change moves numbers on screen on purpose, update the expected
+  values in the browser tests in the same commit.
+- Format with `npm run format` (Prettier, same settings as Lift Log) before committing.
 - Do not change a formula or a default in `src/engine.js` without the owner's approval; when one
   changes on purpose, update its tests and the formula table in README.md in the same change.
-- Keep `src/engine.js`, `src/engine-sheet.js` and `src/model.js` free of DOM, storage and network
-  code so they can move to a backend.
+- Keep `src/engine.js`, `src/engine-sheet.js`, `src/model.js`, `src/wizard-flow.js`,
+  `src/format.js`, `src/compare.js` and `src/routes.js` free of DOM, storage and network code
+  (plain functions with unit tests) so they can move to a backend. Logic goes there, not in
+  `src/views/`.
 - All storage goes through the adapter in `src/storage.js`. All UI text goes in `src/i18n.js`,
   in both English and Danish.
 - No build step and no runtime dependencies unless the owner agrees to add them.
@@ -20,6 +27,31 @@
 - **Never commit personal data or secrets** to this public repo: no saved car data, exports,
   personal spreadsheets (e.g. life_sheet.xlsx) or real figures from them, and no API keys or
   tokens. A future data provider's key must not live in the repo; ask Pedro how it should be held.
+
+## Layout and commands
+
+```
+index.html, css/*.css      page shell; one stylesheet per area (order set in index.html)
+src/app.js                 state, saving, routing, actions      src/routes.js   addresses, tabs
+src/views/*.js             screens (wizard, result, fields, cars, settings, tabs)
+src/wizard-flow.js         wizard steps   src/format.js numbers   src/compare.js comparison
+src/engine.js              cost engine    src/engine-sheet.js sheet mode (tests only)
+src/model.js               car record, settings, migrate(), validation
+src/storage.js             storage adapter   src/backup.js backups   src/update.js update check
+src/i18n.js                all UI text (EN + DA)   src/version.js version   src/boot.js version label
+test/*.test.mjs            unit tests           test/browser/*.spec.mjs browser tests
+```
+
+```bash
+npm install && npx playwright install chromium   # once
+npm start             # http://127.0.0.1:8000/ride-guide/
+npm test              # unit tests
+npm run test:browser  # browser tests (mobile-emulated Chromium); PW_CHROMIUM=<path> to reuse a Chromium
+npm run test:all      # both, before pushing
+npm run format        # Prettier
+```
+
+README.md "How it works" explains the files, the data flow, engine vs sheet mode, storage and tests.
 
 ## Address and shared-origin rules
 

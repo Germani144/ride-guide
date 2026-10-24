@@ -62,11 +62,16 @@ default span becomes 3 years. Km per year saved on each car is kept but no longe
 
 ## Run locally
 
-No build step and no dependencies.
+No build step and no runtime dependencies. Node 18+ is only needed for the tests and tools.
 
 ```bash
-python3 -m http.server 8000   # then open http://localhost:8000
-npm test                      # engine and model tests (Node 18+)
+npm install                      # once: dev tools (Playwright, Prettier)
+npx playwright install chromium  # once: the browser the browser tests use
+npm start                        # then open http://127.0.0.1:8000/ride-guide/
+npm test                         # unit tests: engine, sheet mode, model, wizard, helpers
+npm run test:browser             # the real app in mobile-emulated Chromium
+npm run test:all                 # both
+npm run format                   # Prettier (same settings as Lift Log)
 ```
 
 Opening `index.html` straight from disk does not work, because ES modules need a server.
@@ -132,51 +137,90 @@ saved, so switching back loses nothing).
   Settings (they vary a lot). Needs a price source the app may call from the browser.
 - **Survival model for maintenance**, from Pedro's own algorithms, replacing the maintenance curve.
 
-## Tests
+## How it works
 
-- `test/cost.test.mjs` checks the cost engine: value curve, money tied up, finance, lease
-  renewal, maintenance, tyres, inspection, electricity, insurance, safety margin,
-  and that the defaults stay near FDM's 2026 budget.
-- `test/engine.test.mjs` checks sheet mode (`src/engine-sheet.js`) against the spreadsheet: the seven current columns
-  in `data/sheet_fixtures.json` must match to within 0.01 kr, and three financed scenarios in
-  `data/sheet_fixtures_financed.json` (set on a copy of the workbook and recalculated in
-  LibreOffice) check the finance logic.
-- `test/model.test.mjs` checks the payment method mapping, the v0.1 and v2 data upgrades,
-  which fields the switches ask for, plate formatting, number parsing, validation, that the
-  breakdown adds up to the monthly cost, and that the version matches in `src/version.js` and
-  `package.json`.
-
-## Structure
+### Files
 
 ```
-index.html, css/              page shell and styling (light and dark), one stylesheet per area
-src/version.js                app version (loading screen, Settings, offline cache name)
-src/boot.js                   shows the version in the header and on the loading screen
-src/engine.js                 cost engine: pure functions, no DOM or storage
-src/engine-sheet.js           sheet mode: the spreadsheet's formulas, used by the tests only
-src/model.js                  car data model, payment methods, migration, validation
-src/storage.js                storage adapter (localStorage today)
-src/i18n.js                   English and Danish strings
-src/seed.js                   cars from the spreadsheet
-src/ui.js                     shared interface pieces (plate, price, breakdown, bars, toast)
-src/format.js                 number formatting (English and Danish)
-src/wizard-flow.js            the New car wizard's steps: order, fields, switches (no DOM)
-src/compare.js                what the comparison highlights (no DOM)
-src/routes.js                 addresses (#/...) and which tab is active (no DOM)
-src/update.js                 "Check for updates" (asks the server which version it serves)
-src/backup.js                 backup export and import (JSON files)
-src/app.js                    state, routing (#/new, #/garage, #/history, #/car/:id,
-                              #/compare/:ids, #/settings) and actions
-src/views/wizard.js           New car decision tree (one question per screen)
-src/views/fields.js           the wizard's form controls (fields, choices, switches)
-src/views/result.js           the wizard's result screen and the list of answers
-src/views/cars.js             Garage, History, car page, comparison
-src/views/settings.js         settings
-src/views/tabs.js             bottom tab bar
-fonts/                        Barlow and Barlow Condensed (SIL Open Font License, OFL.txt)
+index.html                    page shell: top bar, loading screen, tab bar, Content-Security-Policy
+css/                          one stylesheet per area, loaded in this order:
+                              base (colours, fonts) · layout (top bar, tabs, loading screen, toast)
+                              · forms · plate · wizard · results · lists · settings
+src/version.js, src/boot.js   app version; shows it in the header and on the loading screen
+src/app.js                    the shell: app state, saving, routing, the actions screens call
+src/routes.js                 addresses (#/new, #/garage, #/history, #/car/:id, #/compare/:ids,
+                              #/settings) and which tab is active
+src/views/                    screens, one file each: wizard, result, fields, cars (Garage,
+                              History, car page, comparison), settings, tabs
+src/wizard-flow.js            the New car wizard's steps: order, fields, switches
+src/ui.js                     shared interface pieces (el(), price, breakdown, bars, plate, toast)
+src/format.js                 numbers in English or Danish
+src/compare.js                what the comparison highlights
+src/engine.js                 the cost engine
+src/engine-sheet.js           sheet mode: the spreadsheet's formulas (tests only)
+src/model.js                  the car record, payment methods, settings, migrate(), validation
+src/storage.js                the storage adapter (localStorage)
+src/backup.js                 backup export and import
+src/update.js                 "Check for updates"
+src/i18n.js                   every interface text, English and Danish
+src/seed.js                   the spreadsheet cars a new install starts with
 sw.js, manifest.webmanifest   offline support and install
-data/, test/                  spreadsheet fixtures and tests
+fonts/, icons/                Barlow (SIL Open Font License, OFL.txt) and the app icon
+data/                         spreadsheet values for the sheet-mode tests
+test/                         unit tests (*.test.mjs) and browser tests (browser/*.spec.mjs)
 ```
+
+Files without DOM, storage or network code, so they can run on a server too: `engine.js`,
+`engine-sheet.js`, `model.js`, `wizard-flow.js`, `format.js`, `compare.js` and `routes.js`.
+
+### Data flow
+
+1. `app.js` loads the saved state through `storage.js`, upgrades it with `migrate()` (or starts
+   from the spreadsheet cars) and draws the screen for the current address.
+2. A screen reads the state and the language's texts; to show a car's cost it calls
+   `evaluate()` in `ui.js`, which turns the car into engine inputs (`toEngineInput()` in
+   `model.js`, adding the shared km per year) and runs `calculate()` from `engine.js` with the
+   settings (years, return rate, prices…).
+3. Typing or tapping changes the state directly (a field writes into the car being edited) and
+   calls `save()`; actions such as saving a car or deleting one live in `app.js`. Then the
+   screen is drawn again.
+4. `save()` writes the whole state a moment later, and at once when the app is hidden or closed.
+
+### Engine and sheet mode
+
+`src/engine.js` is the cost model the app uses (see the formulas above); `test/cost.test.mjs`
+checks each part. `src/engine-sheet.js` is the original port of the spreadsheet: the app no
+longer uses it, but `test/engine.test.mjs` keeps it matching the spreadsheet's values in `data/`,
+as a reference.
+
+### Storage
+
+Everything is stored on the phone, in `localStorage` under the key `rideguide.v1`, as one JSON
+object: `{ version, lang, settings, cars, draft }`. `draft` is a car being added in the wizard.
+Only `src/storage.js` touches storage; moving to a server later means one more adapter with the
+same `load()` and `save()`. When the shape of saved data changes, `STATE_VERSION` goes up and
+`migrate()` in `src/model.js` upgrades older data (with a test). Backups are the same JSON.
+
+### Tests
+
+- Unit tests (`npm test`, Node's built-in runner):
+  - `test/cost.test.mjs`: the cost engine: value curve, money tied up, finance, lease renewal,
+    maintenance, tyres, inspection, electricity, insurance, safety margin, and that the defaults
+    stay near FDM's 2026 budget.
+  - `test/engine.test.mjs`: sheet mode against the spreadsheet: the seven current columns in
+    `data/sheet_fixtures.json` within 0.01 kr, and three financed scenarios in
+    `data/sheet_fixtures_financed.json` (set on a copy of the workbook and recalculated in
+    LibreOffice).
+  - `test/model.test.mjs`: payment methods, data upgrades (v0.1 to v6), switches, plates, number
+    parsing, validation, the breakdown adding up, the version matching in `src/version.js` and
+    `package.json`, the update check, and every app file being in the offline list in `sw.js`.
+  - `test/wizard-flow.test.mjs` and `test/helpers.test.mjs`: the wizard's steps, number
+    formatting, the comparison, routes and switches.
+- Browser tests (`npm run test:browser`, Playwright, Pixel 7 emulation): adding a car (cash and
+  lease), History, the years and km bars, the comparison, a car's page, Settings (saving,
+  reload, update check), English and Danish, and starting offline. The date is fixed so the
+  expected numbers stay put, and any console error, including a Content-Security-Policy
+  violation, fails the test.
 
 ## Built to grow
 
@@ -187,7 +231,7 @@ The pieces that would change for a commercial version are kept separate:
 - **Storage** sits behind `load()` and `save()`. Swapping localStorage for an API with
   accounts means adding one adapter, not touching the UI.
 - **Saved data** carries a `version` field, and `migrate()` upgrades older versions.
-- **The decision tree** is a small table of steps in `src/views/wizard.js`, so a plate lookup
+- **The decision tree** is a small table of steps in `src/wizard-flow.js`, so a plate lookup
   step that prefills the car can slot in after the plate question.
 - **Strings** are all in `src/i18n.js`, so more languages are one block each.
 

@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Compare what cars really cost: lease, buy or finance.",
   "scripts": {
-    "start": "python3 -m http.server 8000",
+    "start": "node test/browser/serve.mjs 8000",
     "test": "node --test test/*.test.mjs",
     "test:browser": "playwright test",
     "test:all": "npm test && npm run test:browser",
