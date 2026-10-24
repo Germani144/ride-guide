@@ -36,7 +36,13 @@ test('add a car through the wizard and save it as my car', async ({ page, app })
   await expect(page.getByRole('heading', { name: 'Test Hatchback' })).toBeVisible();
   await app.saved();
   const car = (await app.state()).cars[0];
-  expect(car).toMatchObject({ name: 'Test Hatchback', method: 'cash', price: 250000, mine: true, greenTaxMo: 200 });
+  expect(car).toMatchObject({
+    name: 'Test Hatchback',
+    method: 'cash',
+    price: 250000,
+    mine: true,
+    greenTaxMo: 200,
+  });
 
   await page.locator('#tabs').getByRole('link', { name: 'Garage' }).click();
   await expect(page.locator('.rows li')).toHaveCount(1);

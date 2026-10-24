@@ -25,9 +25,13 @@ function seedState(lang) {
   const s = emptyState(lang);
   const base = Date.now();
   // Newest first, keeping the spreadsheet's left-to-right order.
-  s.cars = SEED_CARS.map((c, i) => sanitizeCar({
-    ...c, id: makeId(), createdAt: new Date(base - i * 1000).toISOString(),
-  }));
+  s.cars = SEED_CARS.map((c, i) =>
+    sanitizeCar({
+      ...c,
+      id: makeId(),
+      createdAt: new Date(base - i * 1000).toISOString(),
+    }),
+  );
   return s;
 }
 
@@ -58,10 +62,16 @@ function saveDraft({ mine } = {}) {
   const now = new Date().toISOString();
   const s = t();
   if (d.editingId) {
-    const i = state.cars.findIndex((c) => c.id === d.editingId);
+    const i = state.cars.findIndex(c => c.id === d.editingId);
     if (i >= 0) {
       const old = state.cars[i];
-      state.cars[i] = sanitizeCar({ ...d.car, id: old.id, mine: old.mine, createdAt: old.createdAt, updatedAt: now });
+      state.cars[i] = sanitizeCar({
+        ...d.car,
+        id: old.id,
+        mine: old.mine,
+        createdAt: old.createdAt,
+        updatedAt: now,
+      });
       state.draft = null;
       save();
       toast(s.toast.updated);
@@ -78,7 +88,7 @@ function saveDraft({ mine } = {}) {
 }
 
 function updateCar(id, changes, message) {
-  const car = state.cars.find((c) => c.id === id);
+  const car = state.cars.find(c => c.id === id);
   if (!car) return;
   Object.assign(car, changes, { updatedAt: new Date().toISOString() });
   save();
@@ -87,7 +97,7 @@ function updateCar(id, changes, message) {
 }
 
 function deleteCar(id) {
-  state.cars = state.cars.filter((c) => c.id !== id);
+  state.cars = state.cars.filter(c => c.id !== id);
   ui.selected.delete(id);
   save();
   toast(t().toast.deleted);
@@ -95,10 +105,13 @@ function deleteCar(id) {
 }
 
 function editCar(id) {
-  const car = state.cars.find((c) => c.id === id);
+  const car = state.cars.find(c => c.id === id);
   if (!car) return;
   state.draft = startDraft(state, {
-    car: { ...car }, hasPlate: car.plate ? 'yes' : 'no', step: 'result', editingId: id,
+    car: { ...car },
+    hasPlate: car.plate ? 'yes' : 'no',
+    step: 'result',
+    editingId: id,
   });
   save();
   go('#/new');
@@ -106,11 +119,14 @@ function editCar(id) {
 
 // Same car, new payment method: starts at the method question, then straight to the result.
 function tryOtherMethod(id) {
-  const car = state.cars.find((c) => c.id === id);
+  const car = state.cars.find(c => c.id === id);
   if (!car) return;
   state.draft = startDraft(state, {
-    car: { ...car, id: makeId(), mine: false }, hasPlate: car.plate ? 'yes' : 'no',
-    step: 'method', trail: [], jump: true,
+    car: { ...car, id: makeId(), mine: false },
+    hasPlate: car.plate ? 'yes' : 'no',
+    step: 'method',
+    trail: [],
+    jump: true,
   });
   save();
   go('#/new');
@@ -119,7 +135,10 @@ function tryOtherMethod(id) {
 function exportBackup() {
   const data = { ...state, draft: null, exportedAt: new Date().toISOString() };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const a = el('a', { href: URL.createObjectURL(blob), download: `rideguide-${new Date().toISOString().slice(0, 10)}.json` });
+  const a = el('a', {
+    href: URL.createObjectURL(blob),
+    download: `rideguide-${new Date().toISOString().slice(0, 10)}.json`,
+  });
   document.body.append(a);
   a.click();
   a.remove();
@@ -157,19 +176,28 @@ const TABS = [
 
 function renderTabs(route) {
   const s = t();
-  tabs.replaceChildren(...TABS.map(([href, key, icon]) => {
-    const active = route.startsWith(href)
-      || (key === 'history' && (route.startsWith('#/compare') || (route.startsWith('#/car/') && !currentCar(route)?.mine)))
-      || (key === 'garage' && route.startsWith('#/car/') && currentCar(route)?.mine);
-    return el('a', { href, class: 'tab', 'aria-current': active ? 'page' : null }, svg(icon), el('span', {}, s.nav[key]));
-  }));
+  tabs.replaceChildren(
+    ...TABS.map(([href, key, icon]) => {
+      const active =
+        route.startsWith(href) ||
+        (key === 'history' &&
+          (route.startsWith('#/compare') || (route.startsWith('#/car/') && !currentCar(route)?.mine))) ||
+        (key === 'garage' && route.startsWith('#/car/') && currentCar(route)?.mine);
+      return el(
+        'a',
+        { href, class: 'tab', 'aria-current': active ? 'page' : null },
+        svg(icon),
+        el('span', {}, s.nav[key]),
+      );
+    }),
+  );
   settingsLink.setAttribute('aria-label', s.nav.settings);
   settingsLink.setAttribute('aria-current', route.startsWith('#/settings') ? 'page' : 'false');
 }
 
 function currentCar(route) {
   const id = decodeURIComponent(route.split('/')[2] || '');
-  return state.cars.find((c) => c.id === id);
+  return state.cars.find(c => c.id === id);
 }
 
 let lastRoute = '';
@@ -180,8 +208,21 @@ function render({ animate = false, back = false } = {}) {
     ui.selected.clear();
   }
   const ctx = {
-    state, t: t(), ui, route, version: VERSION, save, go, render, saveDraft, updateCar, deleteCar, editCar,
-    tryOtherMethod, exportBackup, importBackup,
+    state,
+    t: t(),
+    ui,
+    route,
+    version: VERSION,
+    save,
+    go,
+    render,
+    saveDraft,
+    updateCar,
+    deleteCar,
+    editCar,
+    tryOtherMethod,
+    exportBackup,
+    importBackup,
   };
   document.documentElement.lang = state.lang;
 
@@ -208,15 +249,20 @@ async function start() {
   state = migrate(await storage.load(), browserLang) ?? seedState(browserLang);
   save(); // writes migrated data back in the current format
   window.addEventListener('hashchange', () => render());
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flush(); });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') flush();
+  });
   window.addEventListener('pagehide', flush);
   render();
   const splash = document.getElementById('splash');
   if (splash) {
-    setTimeout(() => {
-      splash.classList.add('hide');
-      setTimeout(() => splash.remove(), 400);
-    }, Math.max(0, SPLASH_MIN_MS - performance.now()));
+    setTimeout(
+      () => {
+        splash.classList.add('hide');
+        setTimeout(() => splash.remove(), 400);
+      },
+      Math.max(0, SPLASH_MIN_MS - performance.now()),
+    );
   }
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
     navigator.serviceWorker.register('./sw.js', { scope: './', updateViaCache: 'none' }).catch(() => {});

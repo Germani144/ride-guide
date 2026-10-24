@@ -12,9 +12,23 @@ export const FUELS = ['petrol', 'diesel', 'electric'];
 export const ENERGY_DEFAULTS = { petrol: 13.69, diesel: 13.29, electric: 2.5 };
 
 export const NUMBER_FIELDS = [
-  'year', 'yearsOfUse', 'price', 'downPayment', 'apr', 'financeMonths', 'depreciationFactor',
-  'leaseMo', 'oneTimePayment', 'returnFee', 'kmPerYear', 'kmPerUnit', 'pricePerUnit',
-  'insuranceMo', 'greenTaxMo', 'maintenanceMo', 'parkingMo',
+  'year',
+  'yearsOfUse',
+  'price',
+  'downPayment',
+  'apr',
+  'financeMonths',
+  'depreciationFactor',
+  'leaseMo',
+  'oneTimePayment',
+  'returnFee',
+  'kmPerYear',
+  'kmPerUnit',
+  'pricePerUnit',
+  'insuranceMo',
+  'greenTaxMo',
+  'maintenanceMo',
+  'parkingMo',
 ];
 
 export const BOOL_FIELDS = ['depreciationAuto', 'maintenanceAuto', 'serviceIncluded', 'tyresIncluded'];
@@ -39,8 +53,11 @@ export function costFields(car) {
   return f;
 }
 export function runningFields(car) {
-  return RUNNING_FIELDS.filter((f) => f !== 'maintenanceMo'
-    || (car.maintenanceAuto === false && !(car.method === 'lease' && car.serviceIncluded !== false)));
+  return RUNNING_FIELDS.filter(
+    f =>
+      f !== 'maintenanceMo' ||
+      (car.maintenanceAuto === false && !(car.method === 'lease' && car.serviceIncluded !== false)),
+  );
 }
 
 // Settings the user can change, with their defaults (see engine.js).
@@ -63,13 +80,35 @@ export function makeId() {
 export function newCar(overrides = {}) {
   const now = new Date().toISOString();
   return {
-    id: makeId(), plate: '', name: '', fuel: 'petrol', method: 'cash', mine: false,
-    createdAt: now, updatedAt: now,
-    year: 0, yearsOfUse: 3, price: 0, downPayment: 1, apr: 0,
-    financeMonths: 0, depreciationFactor: 0, leaseMo: 0, oneTimePayment: 0, returnFee: 0,
-    kmPerYear: 0, kmPerUnit: 0, pricePerUnit: ENERGY_DEFAULTS.petrol,
-    insuranceMo: 0, greenTaxMo: 0, maintenanceMo: 0, parkingMo: 0,
-    depreciationAuto: true, maintenanceAuto: true, serviceIncluded: true, tyresIncluded: false,
+    id: makeId(),
+    plate: '',
+    name: '',
+    fuel: 'petrol',
+    method: 'cash',
+    mine: false,
+    createdAt: now,
+    updatedAt: now,
+    year: 0,
+    yearsOfUse: 3,
+    price: 0,
+    downPayment: 1,
+    apr: 0,
+    financeMonths: 0,
+    depreciationFactor: 0,
+    leaseMo: 0,
+    oneTimePayment: 0,
+    returnFee: 0,
+    kmPerYear: 0,
+    kmPerUnit: 0,
+    pricePerUnit: ENERGY_DEFAULTS.petrol,
+    insuranceMo: 0,
+    greenTaxMo: 0,
+    maintenanceMo: 0,
+    parkingMo: 0,
+    depreciationAuto: true,
+    maintenanceAuto: true,
+    serviceIncluded: true,
+    tyresIncluded: false,
     ...overrides,
   };
 }
@@ -89,7 +128,9 @@ export function sanitizeCar(raw) {
   const base = newCar();
   const car = { ...base };
   car.id = typeof raw?.id === 'string' && raw.id ? raw.id.slice(0, 64) : base.id;
-  car.name = String(raw?.name ?? '').trim().slice(0, 60);
+  car.name = String(raw?.name ?? '')
+    .trim()
+    .slice(0, 60);
   car.plate = formatPlate(String(raw?.plate ?? ''));
   car.fuel = FUELS.includes(raw?.fuel) ? raw.fuel : inferFuel(raw ?? {});
   car.method = METHODS.includes(raw?.method) ? raw.method : inferMethod(raw ?? {});
@@ -107,10 +148,14 @@ export function sanitizeCar(raw) {
 // The numbers the engine sees. Fields that do not belong to the chosen method count as zero
 // (they stay saved, so switching back loses nothing). `year` is the current calendar year,
 // used for the car's age.
-export function toEngineInput(car, { year = new Date().getFullYear(), kmPerYear = DEFAULT_SETTINGS.kmPerYear } = {}) {
+export function toEngineInput(
+  car,
+  { year = new Date().getFullYear(), kmPerYear = DEFAULT_SETTINGS.kmPerYear } = {},
+) {
   const lease = car.method === 'lease';
   return {
-    method: car.method, fuel: car.fuel,
+    method: car.method,
+    fuel: car.fuel,
     age: car.year > 1900 ? Math.max(0, year - car.year) : 0,
     price: lease ? 0 : car.price,
     downPayment: car.method === 'finance' ? car.downPayment : 1,
@@ -124,9 +169,12 @@ export function toEngineInput(car, { year = new Date().getFullYear(), kmPerYear 
     leaseYears: lease ? car.yearsOfUse : 0,
     serviceIncluded: car.serviceIncluded !== false,
     tyresIncluded: car.tyresIncluded === true,
-    kmPerYear, kmPerUnit: car.kmPerUnit, // fuel and electricity prices come from the settings
-    insuranceMo: car.insuranceMo, greenTaxMo: car.greenTaxMo,
-    maintenanceAuto: car.maintenanceAuto !== false, maintenanceMo: car.maintenanceMo,
+    kmPerYear,
+    kmPerUnit: car.kmPerUnit, // fuel and electricity prices come from the settings
+    insuranceMo: car.insuranceMo,
+    greenTaxMo: car.greenTaxMo,
+    maintenanceAuto: car.maintenanceAuto !== false,
+    maintenanceMo: car.maintenanceMo,
     parkingMo: car.parkingMo,
   };
 }
@@ -140,8 +188,9 @@ export function sanitizeSettings(raw) {
   const out = { ...DEFAULT_SETTINGS };
   for (const k of SETTING_KEYS) {
     const v = raw?.[k];
-    if (typeof DEFAULT_SETTINGS[k] === 'boolean') { if (typeof v === 'boolean') out[k] = v; }
-    else if (typeof v === 'number' && Number.isFinite(v) && v >= 0) out[k] = v;
+    if (typeof DEFAULT_SETTINGS[k] === 'boolean') {
+      if (typeof v === 'boolean') out[k] = v;
+    } else if (typeof v === 'number' && Number.isFinite(v) && v >= 0) out[k] = v;
   }
   if (!(out.years > 0)) out.years = DEFAULT_SETTINGS.years;
   return out;
@@ -155,9 +204,11 @@ export function migrate(raw, fallbackLang = 'en') {
   state.settings = sanitizeSettings(raw.settings);
   // Before v3 the buffer covered costs the model did not know about (tyres, rising repairs).
   // Those are modelled now, so the old 15% default becomes the new, smaller default.
-  if ((raw.version ?? 1) < 3 && raw.settings?.buffer === 0.15) state.settings.buffer = DEFAULT_SETTINGS.buffer;
+  if ((raw.version ?? 1) < 3 && raw.settings?.buffer === 0.15)
+    state.settings.buffer = DEFAULT_SETTINGS.buffer;
   // v4: years of ownership default 3 (was 5); km per year moved from each car to the settings.
-  if ((raw.version ?? 1) < 4 && (raw.settings?.years == null || raw.settings.years === 5)) state.settings.years = DEFAULT_SETTINGS.years;
+  if ((raw.version ?? 1) < 4 && (raw.settings?.years == null || raw.settings.years === 5))
+    state.settings.years = DEFAULT_SETTINGS.years;
   // v6: fuel prices updated to October 2026; prices still at the old defaults move with them.
   if ((raw.version ?? 1) < 6) {
     if (raw.settings?.petrolPrice === 13.69) state.settings.petrolPrice = DEFAULT_SETTINGS.petrolPrice;
@@ -173,7 +224,10 @@ export function migrate(raw, fallbackLang = 'en') {
 // Danish plates are two letters and five digits, written "AB 12 345".
 // Anything else (personal plates, foreign plates) is kept as typed, uppercased.
 export function formatPlate(input) {
-  const raw = String(input).toUpperCase().replace(/[^A-ZÆØÅ0-9]/g, '').slice(0, 7);
+  const raw = String(input)
+    .toUpperCase()
+    .replace(/[^A-ZÆØÅ0-9]/g, '')
+    .slice(0, 7);
   const m = raw.match(/^([A-ZÆØÅ]{2})(\d{0,2})(\d{0,3})$/);
   if (!m) return raw;
   return [m[1], m[2], m[3]].filter(Boolean).join(' ');
@@ -181,7 +235,10 @@ export function formatPlate(input) {
 
 // Parses numbers typed the Danish or English way: "13,69", "13.69", "13.000", "250 000".
 export function parseNumber(text) {
-  let s = String(text ?? '').trim().replace(/\s/g, '').replace(/kr\.?/gi, '');
+  let s = String(text ?? '')
+    .trim()
+    .replace(/\s/g, '')
+    .replace(/kr\.?/gi, '');
   if (!s) return null;
   if (s.includes(',')) s = s.replace(/\./g, '').replace(',', '.');
   else if (/^-?\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, '');
@@ -192,7 +249,9 @@ export function parseNumber(text) {
 // Returns { field: errorKey } for the fields a step asks for.
 export function validate(car, fields) {
   const errors = {};
-  const positive = (f) => { if (!(car[f] > 0)) errors[f] = 'required'; };
+  const positive = f => {
+    if (!(car[f] > 0)) errors[f] = 'required';
+  };
   for (const f of fields) {
     if (f === 'name' && !car.name.trim()) errors.name = 'required';
     if (f === 'plate' && !car.plate.trim()) errors.plate = 'required';

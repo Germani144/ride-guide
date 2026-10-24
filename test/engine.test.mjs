@@ -4,11 +4,10 @@ import { readFileSync } from 'node:fs';
 import { calculate, pmt, ipmt } from '../src/engine-sheet.js';
 
 const cars = JSON.parse(readFileSync(new URL('../data/sheet_fixtures.json', import.meta.url)));
-const close = (a, b, label) =>
-  assert.ok(Math.abs(a - b) < 0.01, `${label}: engine ${a} vs sheet ${b}`);
+const close = (a, b, label) => assert.ok(Math.abs(a - b) < 0.01, `${label}: engine ${a} vs sheet ${b}`);
 
 // Canonical columns (Fiesta GM onward) must reproduce the sheet's cached values.
-for (const car of cars.filter((c) => c.canonical)) {
+for (const car of cars.filter(c => c.canonical)) {
   test(`matches sheet: ${car.name}`, () => {
     const out = calculate({ name: car.name, ...car.input });
     const e = car.expected;
@@ -34,9 +33,23 @@ test('pmt and ipmt behave like Excel', () => {
 
 test('financed purchase: equity credit lowers cost versus paying the full instalment', () => {
   const base = {
-    name: 't', year: 2024, yearsOfUse: 3, downPayment: 0.2, oneTimePayment: 0, returnFee: 0,
-    depreciationFactor: 0.1, kmPerUnit: 18, pricePerUnit: 13, kmPerYear: 12000, insuranceMo: 500,
-    greenTaxMo: 100, maintenanceMo: 200, parkingMo: 0, leaseMo: 0, apr: 0.06, financeMonths: 60,
+    name: 't',
+    year: 2024,
+    yearsOfUse: 3,
+    downPayment: 0.2,
+    oneTimePayment: 0,
+    returnFee: 0,
+    depreciationFactor: 0.1,
+    kmPerUnit: 18,
+    pricePerUnit: 13,
+    kmPerYear: 12000,
+    insuranceMo: 500,
+    greenTaxMo: 100,
+    maintenanceMo: 200,
+    parkingMo: 0,
+    leaseMo: 0,
+    apr: 0.06,
+    financeMonths: 60,
     price: 200000,
   };
   const out = calculate(base);
@@ -51,9 +64,7 @@ test('safe on empty input', () => {
 });
 
 // Financed scenarios: values set in a copy of the workbook and recalculated by LibreOffice.
-const financed = JSON.parse(
-  readFileSync(new URL('../data/sheet_fixtures_financed.json', import.meta.url)),
-);
+const financed = JSON.parse(readFileSync(new URL('../data/sheet_fixtures_financed.json', import.meta.url)));
 for (const car of financed) {
   test(`matches sheet (financed): ${car.name}`, () => {
     const out = calculate({ name: car.name, ...car.input });

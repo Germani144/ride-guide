@@ -6,7 +6,7 @@ test('the app starts offline once it has been opened', async ({ page, context, a
   await page.evaluate(async () => {
     await navigator.serviceWorker.ready;
     if (!navigator.serviceWorker.controller) {
-      await new Promise((r) => navigator.serviceWorker.addEventListener('controllerchange', r, { once: true }));
+      await new Promise(r => navigator.serviceWorker.addEventListener('controllerchange', r, { once: true }));
     }
   });
   await context.setOffline(true);

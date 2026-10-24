@@ -9,8 +9,8 @@ export const test = base.extend({
   errors: [
     async ({ page }, use) => {
       const errors = [];
-      page.on('pageerror', (e) => errors.push(e.message));
-      page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+      page.on('pageerror', e => errors.push(e.message));
+      page.on('console', m => m.type() === 'error' && errors.push(m.text()));
       await use(errors);
       expect(errors, 'errors in the browser console').toEqual([]);
     },

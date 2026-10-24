@@ -24,7 +24,7 @@ test('settings show the version and the update check', async ({ page, app }) => 
   const version = await page.evaluate(() => self.RIDEGUIDE_VERSION);
   await expect(page.locator('.version')).toHaveText(`RideGuide v${version}`);
   await expect(page.locator('#brand-version')).toHaveText(`v${version}`);
-  page.once('dialog', async (d) => {
+  page.once('dialog', async d => {
     expect(d.message()).toBe(`You're on the latest version (v${version}).`);
     await d.accept();
   });

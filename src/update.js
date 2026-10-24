@@ -26,21 +26,27 @@ export async function fetchServedVersion() {
 export async function forceUpdate() {
   try {
     for (const k of await caches.keys()) if (k.startsWith(CACHE_PREFIX)) await caches.delete(k);
-  } catch { /* no CacheStorage */ }
+  } catch {
+    /* no CacheStorage */
+  }
   try {
     const reg = await navigator.serviceWorker?.getRegistration();
     if (reg) {
       await reg.update();
       const sw = reg.installing || reg.waiting;
       if (sw) {
-        await new Promise((resolve) => {
-          const done = () => { if (sw.state === 'activated' || sw.state === 'redundant') resolve(); };
+        await new Promise(resolve => {
+          const done = () => {
+            if (sw.state === 'activated' || sw.state === 'redundant') resolve();
+          };
           sw.addEventListener('statechange', done);
           done();
           setTimeout(resolve, 8000); // don't hang on a slow network: the reload is network-first anyway
         });
       }
     }
-  } catch { /* offline or unsupported: the reload still fetches network-first */ }
+  } catch {
+    /* offline or unsupported: the reload still fetches network-first */
+  }
   location.reload();
 }

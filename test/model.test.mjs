@@ -3,8 +3,19 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { calculate, DEFAULT_SETTINGS, PART_KEYS } from '../src/engine.js';
 import {
-  sanitizeCar, toEngineInput, migrate, formatPlate, parseNumber, validate, newCar, inferMethod,
-  costFields, runningFields, STATE_VERSION, toShown, fromShown,
+  sanitizeCar,
+  toEngineInput,
+  migrate,
+  formatPlate,
+  parseNumber,
+  validate,
+  newCar,
+  inferMethod,
+  costFields,
+  runningFields,
+  STATE_VERSION,
+  toShown,
+  fromShown,
 } from '../src/model.js';
 import { SEED_CARS } from '../src/seed.js';
 
@@ -23,7 +34,7 @@ test('the app version is the same in version.js and package.json', () => {
 });
 
 test('payment method is inferred from the sheet columns', () => {
-  const methods = Object.fromEntries(SEED_CARS.map((c) => [c.name, sanitizeCar(c).method]));
+  const methods = Object.fromEntries(SEED_CARS.map(c => [c.name, sanitizeCar(c).method]));
   assert.equal(methods['Fiesta GM'], 'lease');
   assert.equal(methods.CeedGM, 'lease');
   assert.equal(methods.MondeoI, 'cash');
@@ -32,8 +43,17 @@ test('payment method is inferred from the sheet columns', () => {
 
 test('fields of other methods do not count', () => {
   const car = newCar({
-    method: 'lease', leaseMo: 3000, yearsOfUse: 3, price: 300000, apr: 0.05, financeMonths: 60,
-    downPayment: 0.2, depreciationFactor: 0.1, kmPerYear: 10000, kmPerUnit: 15, pricePerUnit: 13,
+    method: 'lease',
+    leaseMo: 3000,
+    yearsOfUse: 3,
+    price: 300000,
+    apr: 0.05,
+    financeMonths: 60,
+    downPayment: 0.2,
+    depreciationFactor: 0.1,
+    kmPerYear: 10000,
+    kmPerUnit: 15,
+    pricePerUnit: 13,
   });
   const lease = toEngineInput(car);
   assert.equal(lease.price, 0);
@@ -52,14 +72,19 @@ test('fields of other methods do not count', () => {
 });
 
 test('migrates the v0.1 grid state and keeps settings', () => {
-  const v1 = { version: 1, lang: 'da', settings: { buffer: 0.1 }, cars: SEED_CARS.map((c) => ({ id: 'x' + c.name, ...c })) };
+  const v1 = {
+    version: 1,
+    lang: 'da',
+    settings: { buffer: 0.1 },
+    cars: SEED_CARS.map(c => ({ id: 'x' + c.name, ...c })),
+  };
   const s = migrate(v1);
   assert.equal(s.version, STATE_VERSION);
   assert.equal(s.lang, 'da');
   assert.equal(s.settings.buffer, 0.1);
   assert.equal(s.settings.returnRate, DEFAULT_SETTINGS.returnRate);
   assert.equal(s.cars.length, SEED_CARS.length);
-  assert.ok(s.cars.every((c) => c.mine === false && c.method));
+  assert.ok(s.cars.every(c => c.mine === false && c.method));
   assert.equal(migrate({ nope: true }), null);
   assert.equal(migrate(null), null);
 });
@@ -94,7 +119,12 @@ test('validation follows the payment method', () => {
 });
 
 test('v2 data moves to v3: new switches on, the old 15% buffer becomes the new default', () => {
-  const v2 = { version: 2, lang: 'en', settings: { buffer: 0.15 }, cars: [{ name: 'Old', method: 'cash', price: 100000, depreciationFactor: 0.03 }] };
+  const v2 = {
+    version: 2,
+    lang: 'en',
+    settings: { buffer: 0.15 },
+    cars: [{ name: 'Old', method: 'cash', price: 100000, depreciationFactor: 0.03 }],
+  };
   const s = migrate(v2);
   assert.equal(s.version, STATE_VERSION);
   assert.equal(s.settings.buffer, DEFAULT_SETTINGS.buffer);
@@ -131,7 +161,11 @@ test('breakdown parts add up to the monthly cost', () => {
 });
 
 test('v3 data moves to v4: 3 years by default, km per year shared by all cars', () => {
-  const v3 = { version: 3, settings: { years: 5, buffer: 0.05 }, cars: [{ name: 'A', method: 'cash', price: 1, kmPerYear: 8000 }] };
+  const v3 = {
+    version: 3,
+    settings: { years: 5, buffer: 0.05 },
+    cars: [{ name: 'A', method: 'cash', price: 1, kmPerYear: 8000 }],
+  };
   const s = migrate(v3);
   assert.equal(s.version, STATE_VERSION);
   assert.equal(s.settings.years, 3);
@@ -149,7 +183,11 @@ test('green tax is typed per half year and stored per month', () => {
 });
 
 test('v4 data moves to v5: fuel and electricity prices are shared settings', () => {
-  const s = migrate({ version: 4, settings: { years: 3 }, cars: [{ name: 'A', method: 'cash', price: 1, pricePerUnit: 99 }] });
+  const s = migrate({
+    version: 4,
+    settings: { years: 3 },
+    cars: [{ name: 'A', method: 'cash', price: 1, pricePerUnit: 99 }],
+  });
   assert.equal(s.version, STATE_VERSION);
   assert.equal(s.settings.petrolPrice, DEFAULT_SETTINGS.petrolPrice);
   assert.equal(s.settings.homeElPrice, DEFAULT_SETTINGS.homeElPrice);

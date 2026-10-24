@@ -9,23 +9,23 @@
 
 // Settings the user can change (Settings page). Prices are Danish, in today's money (2026).
 export const DEFAULT_SETTINGS = {
-  years: 3,               // years of ownership: the time span every car is compared over
-  kmPerYear: 10000,       // km driven per year, the same for every car compared
-  returnRate: 0.04,       // yearly return on money you don't spend on the car (compounding)
-  buffer: 0.05,           // safety margin on owned cars
-  energyGrowth: 0,        // yearly change in fuel and electricity prices
-  petrolPrice: 17.5,      // kr per litre, October 2026 (shared by every car; live prices are planned)
-  dieselPrice: 19.5,      // kr per litre, October 2026
-  homeElPrice: 1.4,       // kr per kWh charging at home
-  evPublicShare: 0.2,     // share of charging done at public chargers
-  evPublicPrice: 3.5,     // kr per kWh at public (street and fast) chargers
-  evWinterExtra: 0.1,     // extra energy use over the year for electric cars (cold weather)
-  tyreSetPrice: 3500,     // four tyres including fitting
+  years: 3, // years of ownership: the time span every car is compared over
+  kmPerYear: 10000, // km driven per year, the same for every car compared
+  returnRate: 0.04, // yearly return on money you don't spend on the car (compounding)
+  buffer: 0.05, // safety margin on owned cars
+  energyGrowth: 0, // yearly change in fuel and electricity prices
+  petrolPrice: 17.5, // kr per litre, October 2026 (shared by every car; live prices are planned)
+  dieselPrice: 19.5, // kr per litre, October 2026
+  homeElPrice: 1.4, // kr per kWh charging at home
+  evPublicShare: 0.2, // share of charging done at public chargers
+  evPublicPrice: 3.5, // kr per kWh at public (street and fast) chargers
+  evWinterExtra: 0.1, // extra energy use over the year for electric cars (cold weather)
+  tyreSetPrice: 3500, // four tyres including fitting
   tyreLifeKm: 30000,
-  tyreLifeKmEv: 25000,    // heavier cars with instant torque wear tyres faster
-  winterTyres: false,     // a second set, swapped twice a year
+  tyreLifeKmEv: 25000, // heavier cars with instant torque wear tyres faster
+  winterTyres: false, // a second set, swapped twice a year
   tyreSwapPrice: 400,
-  inspectionPrice: 500,   // periodic inspection (syn): at 4 years, then every 2 years
+  inspectionPrice: 500, // periodic inspection (syn): at 4 years, then every 2 years
   washingMo: 100,
 };
 
@@ -36,10 +36,15 @@ export const DEFAULT_SETTINGS = {
 // drive less). Calibrated so a 10-15 year old car loses about 6-7% a year, as Danish market
 // values do (TjekBil's estimates for a 2016 car: 81,000 -> 58,000 kr over 5 years).
 export const VALUE_CURVE = {
-  petrol: { firstYear: 0.20, start: 0.15, floor: 0.06 },
-  diesel: { firstYear: 0.20, start: 0.15, floor: 0.06 },
+  petrol: { firstYear: 0.2, start: 0.15, floor: 0.06 },
+  diesel: { firstYear: 0.2, start: 0.15, floor: 0.06 },
   electric: { firstYear: 0.22, start: 0.17, floor: 0.07 },
-  tau: 4, kmNorm: 15000, kmStep: 5000, kmRate: 0.01, min: 0.03, max: 0.30,
+  tau: 4,
+  kmNorm: 15000,
+  kmStep: 5000,
+  kmRate: 0.01,
+  min: 0.03,
+  max: 0.3,
 };
 
 // Maintenance and repairs (tyres not included): a yearly base plus a cost per km,
@@ -48,7 +53,8 @@ export const MAINTENANCE = {
   petrol: { baseYear: 3000, perKm: 0.25 },
   diesel: { baseYear: 3500, perKm: 0.25 },
   electric: { baseYear: 2000, perKm: 0.15 },
-  ageGrowth: 0.08, maxAge: 15,
+  ageGrowth: 0.08,
+  maxAge: 15,
 };
 
 // Share of the insurance premium that follows the car's value (the rest is fixed).
@@ -57,8 +63,18 @@ export const INSPECTION = { firstAge: 4, every: 2 };
 
 // Order of the parts in the breakdown.
 export const PART_KEYS = [
-  'lease', 'depreciation', 'capital', 'interest', 'energy', 'insurance', 'greenTax',
-  'maintenance', 'tyres', 'other', 'parking', 'buffer',
+  'lease',
+  'depreciation',
+  'capital',
+  'interest',
+  'energy',
+  'insurance',
+  'greenTax',
+  'maintenance',
+  'tyres',
+  'other',
+  'parking',
+  'buffer',
 ];
 
 /**
@@ -88,7 +104,7 @@ export const PART_KEYS = [
  * @property {number} parkingMo
  */
 
-const num = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : 0);
+const num = v => (typeof v === 'number' && Number.isFinite(v) ? v : 0);
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
 // Excel PMT with fv = 0, returned as a positive payment for a positive loan.
@@ -133,7 +149,7 @@ export function calculate(input, settings = {}) {
   const s = { ...DEFAULT_SETTINGS, ...settings };
   const months = Math.max(1, Math.round(num(s.years) * 12));
   const rm = Math.pow(1 + num(s.returnRate), 1 / 12) - 1; // monthly rate, compounding
-  const disc = (k) => Math.pow(1 + rm, -k);
+  const disc = k => Math.pow(1 + rm, -k);
   let annuity = 0; // value today of 1 kr paid at the end of every month
   for (let k = 1; k <= months; k++) annuity += disc(k);
 
@@ -146,13 +162,13 @@ export function calculate(input, settings = {}) {
   const age0 = Math.max(0, num(input.age));
   const price = owned ? num(input.price) : 0;
 
-  const valueAt = (years) => {
+  const valueAt = years => {
     if (!price) return 0;
     if (input.depreciationAuto === false) return price / Math.pow(1 + num(input.depreciationFactor), years);
     return (price * valueCurve(fuel, kmYear, age0 + years)) / valueCurve(fuel, kmYear, age0);
   };
 
-  const pv = {};   // value today of each part
+  const pv = {}; // value today of each part
   const paid = {}; // plain sum paid within the time span
   const add = (key, amount, k) => {
     if (!amount) return;
@@ -205,7 +221,8 @@ export function calculate(input, settings = {}) {
 
   // ----- month by month -----
   const life = electric ? s.tyreLifeKmEv : s.tyreLifeKm;
-  const pumpOrHome = input.pricePerUnit ?? (electric ? s.homeElPrice : fuel === 'diesel' ? s.dieselPrice : s.petrolPrice);
+  const pumpOrHome =
+    input.pricePerUnit ?? (electric ? s.homeElPrice : fuel === 'diesel' ? s.dieselPrice : s.petrolPrice);
   const unitPrice = electric
     ? (1 - num(s.evPublicShare)) * num(pumpOrHome) + num(s.evPublicShare) * num(s.evPublicPrice)
     : num(pumpOrHome);
@@ -215,34 +232,43 @@ export function calculate(input, settings = {}) {
   const tyresByLease = lease && input.tyresIncluded === true;
 
   for (let k = 1; k <= months; k++) {
-    const mid = (k - 0.5) / 12;          // years since you got the car, mid-month
+    const mid = (k - 0.5) / 12; // years since you got the car, mid-month
     const age = age0 + mid;
     if (lease) add('lease', num(input.leaseMo), k);
     const growth = Math.pow(1 + num(s.energyGrowth), (k - 1) / 12);
     add('energy', kmPerUnit ? (kmMo / kmPerUnit) * unitPrice * growth : 0, k);
 
     const ins = num(input.insuranceMo);
-    const insShare = owned && price ? 1 - INSURANCE_VALUE_SHARE + (INSURANCE_VALUE_SHARE * valueAt(mid)) / price : 1;
+    const insShare =
+      owned && price ? 1 - INSURANCE_VALUE_SHARE + (INSURANCE_VALUE_SHARE * valueAt(mid)) / price : 1;
     add('insurance', ins * insShare, k);
     add('greenTax', num(input.greenTaxMo), k);
     add('parking', num(input.parkingMo), k);
 
     if (!serviceByLease) {
-      const maint = input.maintenanceAuto === false
-        ? num(input.maintenanceMo)
-        : ((m.baseYear + m.perKm * kmYear) / 12) * (1 + MAINTENANCE.ageGrowth * Math.min(age, MAINTENANCE.maxAge));
+      const maint =
+        input.maintenanceAuto === false
+          ? num(input.maintenanceMo)
+          : ((m.baseYear + m.perKm * kmYear) / 12) *
+            (1 + MAINTENANCE.ageGrowth * Math.min(age, MAINTENANCE.maxAge));
       add('maintenance', maint, k);
-      if (inspectionsBy(age0 + k / 12) > inspectionsBy(age0 + (k - 1) / 12)) add('other', num(s.inspectionPrice), k);
+      if (inspectionsBy(age0 + k / 12) > inspectionsBy(age0 + (k - 1) / 12))
+        add('other', num(s.inspectionPrice), k);
     }
     if (!tyresByLease) {
-      add('tyres', (kmMo * num(s.tyreSetPrice)) / (num(life) || 1) + (s.winterTyres ? (2 * num(s.tyreSwapPrice)) / 12 : 0), k);
+      add(
+        'tyres',
+        (kmMo * num(s.tyreSetPrice)) / (num(life) || 1) +
+          (s.winterTyres ? (2 * num(s.tyreSwapPrice)) / 12 : 0),
+        k,
+      );
     }
     add('other', num(s.washingMo), k);
   }
 
   // ----- equivalent monthly cost per part -----
-  const eq = (v) => (v || 0) / annuity;
-  const parts = Object.fromEntries(PART_KEYS.map((key) => [key, 0]));
+  const eq = v => (v || 0) / annuity;
+  const parts = Object.fromEntries(PART_KEYS.map(key => [key, 0]));
   for (const key of Object.keys(pv)) parts[key] = eq(pv[key]);
   if (lease) parts.lease += eq(leaseFirst);
   if (owned && price) {
@@ -260,12 +286,18 @@ export function calculate(input, settings = {}) {
   const perMonth = PART_KEYS.reduce((a, key) => a + parts[key], 0);
   const paidRunning = Object.values(paid).reduce((a, v) => a + v, 0);
   return {
-    months, kmMo, owned, parts, perMonth,
+    months,
+    kmMo,
+    owned,
+    parts,
+    perMonth,
     perKm: kmMo ? perMonth / kmMo : 0,
     period: perMonth * months,
     upfront,
     paidMonthly: (paidRunning + instalments) / months,
-    residual, loanLeft, interestPaid,
+    residual,
+    loanLeft,
+    interestPaid,
     yearlyValueLoss: yearlyValueLoss(fuel, kmYear, Math.max(1, age0)),
   };
 }

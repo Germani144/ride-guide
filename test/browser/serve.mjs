@@ -36,7 +36,10 @@ createServer(async (req, res) => {
   if (rel === '.' || rel.endsWith('/')) rel = join(rel, 'index.html');
   try {
     const body = await readFile(join(ROOT, rel));
-    res.writeHead(200, { 'Content-Type': TYPES[extname(rel)] || 'application/octet-stream', 'Cache-Control': 'no-cache' });
+    res.writeHead(200, {
+      'Content-Type': TYPES[extname(rel)] || 'application/octet-stream',
+      'Cache-Control': 'no-cache',
+    });
     res.end(body);
   } catch {
     res.writeHead(404).end('not found');

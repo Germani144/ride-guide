@@ -10,13 +10,15 @@ const HISTORY = [
   ['Y GM', '5.94 kr per km', '4,954 kr per month'],
   ['Scenic GM', '5.72 kr per km', '4,765 kr per month'],
 ];
-const AT_20000_KM = ['3.14', '3.36', '3.02', '3.21', '3.69', '3.11', '3.00'].map((v) => `${v} kr per km`);
+const AT_20000_KM = ['3.14', '3.36', '3.02', '3.21', '3.69', '3.11', '3.00'].map(v => `${v} kr per km`);
 
 test('history lists every car with its cost', async ({ page, app }) => {
   await app.open('#/history');
-  const rows = await page.locator('.rows li').evaluateAll((items) =>
-    items.map((li) => ['.row-name', '.row-km', '.row-month'].map((s) => li.querySelector(s).textContent)),
-  );
+  const rows = await page
+    .locator('.rows li')
+    .evaluateAll(items =>
+      items.map(li => ['.row-name', '.row-km', '.row-month'].map(s => li.querySelector(s).textContent)),
+    );
   expect(rows).toEqual(HISTORY);
 });
 
@@ -52,7 +54,7 @@ test('a car page shows the breakdown, can be marked as mine and deleted', async 
   await expect(page.locator('.legend li').first()).toContainText('Maintenance and repairs1,100 kr');
   await page.getByRole('button', { name: 'This is my car' }).click();
   await expect(page.locator('.toast')).toHaveText('Added to your garage');
-  page.once('dialog', (d) => d.accept());
+  page.once('dialog', d => d.accept());
   await page.getByRole('button', { name: 'Delete car' }).click();
   await expect(page.locator('.toast')).toHaveText('Car deleted');
   await expect(page.locator('.rows li')).toHaveCount(6);

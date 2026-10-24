@@ -27,7 +27,7 @@ export const DEFAULT_BUFFER = 0.15; // sheet row "Projection per month": owned c
  * @property {number} price
  */
 
-const num = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : 0);
+const num = v => (typeof v === 'number' && Number.isFinite(v) ? v : 0);
 
 // Excel PMT with fv = 0, returned as a positive payment for a positive loan.
 export function pmt(ratePerPeriod, nper, pv) {
@@ -65,9 +65,7 @@ export function calculate(input, opts = {}) {
   const fuelMo = kmMo * fuelPerKm;
 
   // Depreciation: (price - price / (1 + f)^years) / months
-  const deprMo = months
-    ? (price - price / Math.pow(1 + num(input.depreciationFactor), years)) / months
-    : 0;
+  const deprMo = months ? (price - price / Math.pow(1 + num(input.depreciationFactor), years)) / months : 0;
   const residual = price - deprMo * months;
 
   // Finance: -PMT(apr/12, period, price - downPayment * price)
@@ -118,16 +116,43 @@ export function calculate(input, opts = {}) {
   };
 
   return {
-    months, kmMo, fuelPerKm, fuelMo, deprMo, residual, financeMo,
-    fixed, variable, total, cashflow, projection, kmCost, spent, shares,
+    months,
+    kmMo,
+    fuelPerKm,
+    fuelMo,
+    deprMo,
+    residual,
+    financeMo,
+    fixed,
+    variable,
+    total,
+    cashflow,
+    projection,
+    kmCost,
+    spent,
+    shares,
   };
 }
 
 export function emptyCar(name = 'New car') {
   return {
-    name, year: new Date().getFullYear(), yearsOfUse: 3, downPayment: 1, oneTimePayment: 0,
-    returnFee: 0, depreciationFactor: 0, kmPerUnit: 15, pricePerUnit: 13, kmPerYear: 12000,
-    insuranceMo: 0, greenTaxMo: 0, maintenanceMo: 0, parkingMo: 0, leaseMo: 0, apr: 0,
-    financeMonths: 0, price: 0,
+    name,
+    year: new Date().getFullYear(),
+    yearsOfUse: 3,
+    downPayment: 1,
+    oneTimePayment: 0,
+    returnFee: 0,
+    depreciationFactor: 0,
+    kmPerUnit: 15,
+    pricePerUnit: 13,
+    kmPerYear: 12000,
+    insuranceMo: 0,
+    greenTaxMo: 0,
+    maintenanceMo: 0,
+    parkingMo: 0,
+    leaseMo: 0,
+    apr: 0,
+    financeMonths: 0,
+    price: 0,
   };
 }
